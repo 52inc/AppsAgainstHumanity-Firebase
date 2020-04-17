@@ -23,7 +23,11 @@ jobs:
       
     - name: Install Mocha Globally
       run: npm install -g mocha
-      
-    - run: npm ci
+
+    - name: Install Project
+      run: |
+        cd functions/
+        npm ci
+
     - run: npm run build --if-present
     - run: npm test
