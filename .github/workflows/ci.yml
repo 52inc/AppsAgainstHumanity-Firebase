@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js 8 
+      uses: actions/setup-node@v1
+      with:
+        node-version: 8
+      
+    - name: Install Mocha Globally
+      run: npm install -g mocha
+
+    - name: Run Mocha Tests
+      run: |
+        cd functions/
+        npm ci
+        npm run test
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js 8
+        uses: actions/setup-node@v1
+        with:
+          node-version: 8
+
+      - name: Build
+        run: |
+          cd functions/
+          npm ci
+          npm run build
+
+      - name: Deploy to Firebase
+        uses: w9jds/firebase-action@master
+        with:
+          args: deploy --only functions
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
