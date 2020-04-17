@@ -1,4 +1,5 @@
 import {Special} from "../models/cards";
+import {shuffle} from "./shuffle";
 
 /**
  * Deal response cards from the card pool based on the {@link PromptCard.special}
@@ -25,22 +26,9 @@ export function pickRandomCountFromArray<T>(array: T[], count: number): T[] {
     const amount = Math.min(array.length, count);
     for (let i = 0; i < amount; i++) {
         items.push(draw(array)); // Remove the item from the array
+        shuffle(array); // Reshuffle array
     }
     return items;
-}
-
-/**
- * Draw a count of cards off the "top" of an array
- * @param array
- * @param count
- */
-export function drawCount<T>(array: T[], count: number): T[] {
-    const cards: T[] = [];
-    for (let i=0; i<count; i++) {
-        const item = array.pop();
-        if (item) cards.push(item);
-    }
-    return cards;
 }
 
 /**

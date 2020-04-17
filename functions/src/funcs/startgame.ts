@@ -3,7 +3,7 @@ import {CallableContext, FunctionsErrorCode} from "firebase-functions/lib/provid
 import * as firestore from '../firestore/firestore';
 import {CardSet, getSpecial} from "../models/cards";
 import {shuffle} from "../util/shuffle";
-import {dealResponses, draw, drawCount, pickRandomCountFromArray} from "../util/deal";
+import {dealResponses, draw, pickRandomCountFromArray} from "../util/deal";
 import {Turn} from "../models/turn";
 import {Player, RANDO_CARDRISSIAN} from "../models/player";
 import {flatMap} from "../util/flatmap";
@@ -102,7 +102,7 @@ async function dealPlayersIn(gameId: string, players: Player[], cardPool: CardPo
     for (const player of players) {
         if (!player.isRandoCardrissian) {
             // Draw and fetch hand
-            const handIndexes = drawCount(cardPool.responses, 10);
+            const handIndexes = pickRandomCountFromArray(cardPool.responses, 10);
             const hand = await firestore.cards.getResponseCards(handIndexes);
 
             // Update player's hand in firestore
