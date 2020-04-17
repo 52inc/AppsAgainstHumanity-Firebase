@@ -1,7 +1,7 @@
 import * as functions from 'firebase-functions';
 import {CallableContext, FunctionsErrorCode} from "firebase-functions/lib/providers/https";
 import * as firestore from '../firestore/firestore';
-import {CardSet, getSpecial, ResponseCard} from "../models/cards";
+import {CardSet, getSpecial} from "../models/cards";
 import {shuffle} from "../util/shuffle";
 import {dealResponses, draw, pickRandomCountFromArray} from "../util/deal";
 import {Turn} from "../models/turn";
@@ -140,13 +140,13 @@ async function generateFirstTurn(gameId: string, players: Player[], cardPool: Ca
     const turn: Turn = {
         judgeId: judgeOrder[0],
         promptCard: promptCard,
-        responses: new Map<string, ResponseCard[]>(),
+        responses: {},
     };
 
     // Go ahead and set Rando Cardrissian's response if he is a part of this game
     if (players.find((p) => p.isRandoCardrissian)) {
         const randoResponseCardIndexes = dealResponses(cardPool.responses, getSpecial(promptCard.special));
-        turn.responses.set(RANDO_CARDRISSIAN, await firestore.cards.getResponseCards(randoResponseCardIndexes));
+        turn.responses[RANDO_CARDRISSIAN] = await firestore.cards.getResponseCards(randoResponseCardIndexes);
         console.log("Rando Cardrissian has been dealt into the first turn")
     }
 
