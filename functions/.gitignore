@@ -4,7 +4,7 @@
 
 # Typescript v1 declaration files
 typings/
-
+.idea/
 node_modules/
 
 firebase_admin_sdk.json
