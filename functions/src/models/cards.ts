@@ -18,9 +18,9 @@ export type ResponseCard = {
 export type CardSet = {
     name: string;
     prompts: number;
-    promptIndexes: string[];
+    promptIndexes?: string[];
     responses: number;
-    responseIndexes: string[];
+    responseIndexes?: string[];
 }
 
 /**

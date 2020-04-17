@@ -30,6 +30,20 @@ export function pickRandomCountFromArray<T>(array: T[], count: number): T[] {
 }
 
 /**
+ * Draw a count of cards off the "top" of an array
+ * @param array
+ * @param count
+ */
+export function drawCount<T>(array: T[], count: number): T[] {
+    const cards: T[] = [];
+    for (let i=0; i<count; i++) {
+        const item = array.pop();
+        if (item) cards.push(item);
+    }
+    return cards;
+}
+
+/**
  * Draw a random card from the array
  * @param array the array to draw and modify from
  */

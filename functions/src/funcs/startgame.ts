@@ -3,7 +3,7 @@ import {CallableContext, FunctionsErrorCode} from "firebase-functions/lib/provid
 import * as firestore from '../firestore/firestore';
 import {CardSet, getSpecial} from "../models/cards";
 import {shuffle} from "../util/shuffle";
-import {dealResponses, draw, pickRandomCountFromArray} from "../util/deal";
+import {dealResponses, draw, drawCount, pickRandomCountFromArray} from "../util/deal";
 import {Turn} from "../models/turn";
 import {Player, RANDO_CARDRISSIAN} from "../models/player";
 import {flatMap} from "../util/flatmap";
@@ -38,8 +38,8 @@ export async function handleStartGame(data: any, context: CallableContext) {
                     const cardSets = await firestore.cards.getCardSet(...game.cardSets);
                     if (cardSets.length > 0) {
                         // combine and shuffle all prompt cards
-                        const promptCardIndexes = combineAndShuffleIndexes(cardSets, (set) => set.promptIndexes);
-                        const responseCardIndexes = combineAndShuffleIndexes(cardSets, (set) => set.responseIndexes);
+                        const promptCardIndexes = combineAndShuffleIndexes(cardSets, (set) => set.promptIndexes ?? []);
+                        const responseCardIndexes = combineAndShuffleIndexes(cardSets, (set) => set.responseIndexes ?? []);
                         const promptCards = pickRandomCountFromArray(promptCardIndexes, promptCardSeedCount(players.length));
                         const responseCards = pickRandomCountFromArray(responseCardIndexes, responseCardSeedCount(players.length));
                         const cardPool: CardPool = { prompts: promptCards, responses: responseCards };
@@ -50,16 +50,13 @@ export async function handleStartGame(data: any, context: CallableContext) {
                         /*
                          * Generate the turn
                          */
-
                         await generateFirstTurn(gameId, players, cardPool);
 
                         /*
                          * Seed Card Pool
                          */
-
-                        // Persist what remains of the card pool the games pool of cards
-                        await firestore.games.seedCardPool(gameId, promptCardIndexes, responseCardIndexes);
-                        console.log(`The Game(${gameId}) has now been seeded with ${promptCardIndexes.length} Prompt cards and ${responseCardIndexes.length} Response cards`);
+                        await firestore.games.seedCardPool(gameId, cardPool.prompts, cardPool.responses);
+                        console.log(`The Game(${gameId}) has now been seeded with ${cardPool.prompts.length} Prompt cards and ${cardPool.responses.length} Response cards`);
 
                         /*
                          * Game, Set & Match
@@ -67,7 +64,7 @@ export async function handleStartGame(data: any, context: CallableContext) {
 
                         // Now that we have dealt in every player, set judging rotation, setup first turn, and seeded
                         // the card pool it's now time to update the card's set to 'inProgress'
-                        await firestore.games.updateState(gameId, 'inProgress');
+                        await firestore.games.updateState(gameId, 'inProgress', players);
 
                         // FINISH! Return some arbitrary result that the app won't deal with.
                         return {
@@ -105,7 +102,7 @@ async function dealPlayersIn(gameId: string, players: Player[], cardPool: CardPo
     for (const player of players) {
         if (!player.isRandoCardrissian) {
             // Draw and fetch hand
-            const handIndexes = pickRandomCountFromArray(cardPool.responses, 10);
+            const handIndexes = drawCount(cardPool.responses, 10);
             const hand = await firestore.cards.getResponseCards(handIndexes);
 
             // Update player's hand in firestore

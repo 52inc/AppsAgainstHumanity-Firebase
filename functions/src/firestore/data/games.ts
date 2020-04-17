@@ -1,7 +1,7 @@
 import {
     COLLECTION_CARD_POOL,
     COLLECTION_GAMES,
-    COLLECTION_PLAYERS,
+    COLLECTION_PLAYERS, COLLECTION_USERS,
     DOCUMENT_PROMPTS,
     DOCUMENT_RESPONSES
 } from '../constants';
@@ -71,14 +71,35 @@ export async function setTurn(gameId: string, turn: Turn): Promise<void> {
  * Update the {@link Game} state
  * @param gameId the game to update
  * @param state the state to update to
+ * @param players the list of players to update their state of
  */
-export async function updateState(gameId: string, state: GameState): Promise<void> {
+export async function updateState(gameId: string, state: GameState, players: Player[] = []): Promise<void> {
     const gameDoc = firestore.collection(COLLECTION_GAMES)
         .doc(gameId);
 
     await gameDoc.update({
         state: state
     })
+
+    // We should also update all the UserGame states for every player connected to the game
+    if (players.length > 0) {
+        for (const player of players) {
+            if (!player.isRandoCardrissian) {
+                const playerUserGameDoc = firestore.collection(COLLECTION_USERS)
+                    .doc(player.id)
+                    .collection(COLLECTION_GAMES)
+                    .doc(gameId);
+
+                try {
+                    await playerUserGameDoc.update({
+                        state: state
+                    })
+                } catch (e) {
+                    console.log(`Unable to update player's game state: ${e}`)
+                }
+            }
+        }
+    }
 }
 
 /**
@@ -93,17 +114,21 @@ export async function seedCardPool(
     promptCardIndexes: string[],
     responseCardIndexes: string[]
 ): Promise<void> {
+    console.log(`Seeding Game(${gameId}) Card Pool`);
+    console.log(`Prompts: ${promptCardIndexes}`);
+    console.log(`Responses: ${responseCardIndexes}`);
+
     const cardPoolCollection = firestore.collection(COLLECTION_GAMES)
         .doc(gameId)
         .collection(COLLECTION_CARD_POOL);
 
     await cardPoolCollection.doc(DOCUMENT_PROMPTS)
         .set({
-            cards: promptCardIndexes
+            cards: (promptCardIndexes ?? [])
         });
 
     await cardPoolCollection.doc(DOCUMENT_RESPONSES)
         .set({
-            cards: responseCardIndexes
+            cards: (responseCardIndexes ?? [])
         });
 }
