@@ -33,10 +33,14 @@ export async function handleStartGame(data: any, context: CallableContext) {
             if (game?.state === 'waitingRoom') {
                 // Game exists and is in the appropriate state. Now we will seed the card pull
                 const players = await firestore.games.getPlayers(gameId);
-                if (players && players.length > 1) {
+                if (players && players.length > 2) {
                     // Okay, enough players are in this game, now seed it
                     const cardSets = await firestore.cards.getCardSet(...game.cardSets);
                     if (cardSets.length > 0) {
+
+                        // Update the state to 'starting' so the clients reflect this state appropriately
+                        await firestore.games.updateState(gameId, 'starting');
+
                         // combine and shuffle all prompt cards
                         const promptCardIndexes = combineAndShuffleIndexes(cardSets, (set) => set.promptIndexes ?? []);
                         const responseCardIndexes = combineAndShuffleIndexes(cardSets, (set) => set.responseIndexes ?? []);

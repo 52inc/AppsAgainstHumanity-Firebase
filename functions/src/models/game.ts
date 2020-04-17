@@ -17,4 +17,4 @@ export type Game = {
     winner?: string;
 }
 
-export declare type GameState = 'waitingRoom' | 'inProgress' | 'completed';
+export declare type GameState = 'waitingRoom' | 'starting' | 'inProgress' | 'completed';
