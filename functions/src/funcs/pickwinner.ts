@@ -116,6 +116,11 @@ export async function handlePickWinner(data: any, context: CallableContext) {
                         console.log(`New cards dealt to ${player.name}`);
                     }
                 }
+
+                return {
+                    game_id: gameId,
+                    success: true,
+                }
             } else{
                 error('not-found',
                     `Unable to find a game for ${gameId}`)
