@@ -12,6 +12,8 @@ import {cards, firestore} from "../firestore";
 import {PromptCard, ResponseCard} from "../../models/cards";
 import {CardPool} from "../../models/pool";
 import {draw, pickRandomCountFromArray} from "../../util/deal";
+import * as admin from "firebase-admin";
+import FieldValue = admin.firestore.FieldValue;
 
 /**
  * Fetch a {@link Game} object by it's {gameId}
@@ -124,7 +126,7 @@ export async function updateState(gameId: string, state: GameState, players: Pla
 
     await gameDoc.update({
         state: state
-    })
+    });
 
     // We should also update all the UserGame states for every player connected to the game
     if (players.length > 0) {
@@ -145,6 +147,24 @@ export async function updateState(gameId: string, state: GameState, players: Pla
             }
         }
     }
+}
+
+export async function incrementRound(gameId: string): Promise<void> {
+    const gameDoc = firestore.collection(COLLECTION_GAMES)
+        .doc(gameId);
+
+    await gameDoc.update({
+        round: FieldValue.increment(1)
+    });
+}
+
+export async function setGameWinner(gameId: string, playerId: string): Promise<void> {
+    const gameDoc = firestore.collection(COLLECTION_GAMES)
+        .doc(gameId);
+
+    await gameDoc.update({
+        winner: playerId
+    });
 }
 
 /**

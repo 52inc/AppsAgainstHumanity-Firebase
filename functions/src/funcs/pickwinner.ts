@@ -33,7 +33,7 @@ export async function handlePickWinner(data: any, context: CallableContext) {
                 if (game.turn!.judgeId !== uid)
                     error('permission-denied', 'Only the judge can pick a winner for the turn');
 
-                const players = await firestore.games.getPlayers(gameId);
+                let players = await firestore.games.getPlayers(gameId);
                 if (!players || players.length === 0)
                     error('not-found', ' No players found for this game');
 
@@ -115,6 +115,17 @@ export async function handlePickWinner(data: any, context: CallableContext) {
 
                         console.log(`New cards dealt to ${player.name}`);
                     }
+                }
+
+                // Increment the game round
+                await firestore.games.incrementRound(gameId);
+
+                // Check win condition, and set the game to completed
+                players = await firestore.games.getPlayers(gameId);
+                const gameWinningPlayer = players?.find((p) => (p.prizes?.length ?? 0) >= game.prizesToWin);
+                if (gameWinningPlayer) {
+                    await firestore.games.setGameWinner(gameId, gameWinningPlayer.id);
+                    await firestore.games.updateState(gameId, 'completed', players);
                 }
 
                 return {
