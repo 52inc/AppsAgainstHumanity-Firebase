@@ -91,7 +91,7 @@ export async function handlePickWinner(data: any, context: CallableContext) {
                 console.log(`Next turn has now been set!`);
 
                 // Award previous game's prompt to winning player
-                await firestore.players.awardPrompt(gameId, winningPlayerId, game.turn!.promptCard!);
+                await firestore.players.awardPrompt(gameId, winningPlayerId, game.turn!.promptCard);
 
                 // Now Re-deal cards to the player based on the new prompt's special
                 let dealCount = 1;
