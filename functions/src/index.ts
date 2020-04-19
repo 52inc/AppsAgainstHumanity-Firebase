@@ -1,5 +1,6 @@
 import * as functions from 'firebase-functions';
 import {handleStartGame} from "./funcs/startgame";
+import {handlePickWinner} from "./funcs/pickwinner";
 
 /**
  * Start Game - [Callable Function]
@@ -23,3 +24,17 @@ import {handleStartGame} from "./funcs/startgame";
  * </code></p>
  */
 exports.startGame = functions.https.onCall(handleStartGame);
+
+/**
+ * Pick Winner - [Callable Function]
+ *
+ * 1. Set winner on Turn object of the current game
+ * 2. Award the prompt to the winning player
+ * 3. Re-generate the Turn
+ *    a. Draw new Prompt Card
+ *    b. Clear responses
+ *    c. Clear downvotes
+ *    d. Draw Rando-Cardrissian, if present
+ * 4. Draw new cards for all players
+ */
+exports.pickWinner = functions.https.onCall(handlePickWinner);

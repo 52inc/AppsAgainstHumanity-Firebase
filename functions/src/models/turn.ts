@@ -5,5 +5,13 @@ export type Turn = {
     promptCard: PromptCard;
     responses: {[playerId: string]: ResponseCard[]};
     downvotes?: string[];
-    winnerId?: string;
+    winner?: TurnWinner;
+}
+
+export type TurnWinner = {
+    playerId: string;
+    playerName: string;
+    playerAvatarUrl?: string;
+    promptCard: PromptCard;
+    response: ResponseCard[];
 }

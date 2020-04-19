@@ -1,5 +1,4 @@
-import * as functions from 'firebase-functions';
-import {CallableContext, FunctionsErrorCode} from "firebase-functions/lib/providers/https";
+import {CallableContext} from "firebase-functions/lib/providers/https";
 import * as firestore from '../firestore/firestore';
 import {CardSet, getSpecial} from "../models/cards";
 import {shuffle} from "../util/shuffle";
@@ -7,6 +6,7 @@ import {dealResponses, draw, pickRandomCountFromArray} from "../util/deal";
 import {Turn} from "../models/turn";
 import {Player, RANDO_CARDRISSIAN} from "../models/player";
 import {flatMap} from "../util/flatmap";
+import {error} from "../util/error";
 
 type CardPool = {
     prompts: string[];
@@ -191,8 +191,4 @@ function responseCardSeedCount(numPlayers: number): number {
         (numPlayers * 9) + /* To account for drawing cards */
         (numPlayers * 20); /* To account for re-deals */
     return Math.max(count, 200);
-}
-
-function error(code: FunctionsErrorCode, message: string): never {
-    throw new functions.https.HttpsError(code, message);
 }

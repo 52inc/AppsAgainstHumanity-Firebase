@@ -8,7 +8,10 @@ import {
 import {Game, GameState} from "../../models/game";
 import {Player} from "../../models/player";
 import {Turn} from "../../models/turn";
-import {firestore} from "../firestore";
+import {cards, firestore} from "../firestore";
+import {PromptCard, ResponseCard} from "../../models/cards";
+import {CardPool} from "../../models/pool";
+import {draw, pickRandomCountFromArray} from "../../util/deal";
 
 /**
  * Fetch a {@link Game} object by it's {gameId}
@@ -35,6 +38,48 @@ export async function getPlayers(gameId: string): Promise<Player[] | undefined> 
 
     const playersSnapshot = await playerCollection.get();
     return playersSnapshot.docs.map((snapshot) => snapshot.data() as Player);
+}
+
+/**
+ * Draw a new prompt card from the game pool by removing it
+ * @param gameId the game id to draw from
+ * @return a {@link Promise} of the {@link PromptCard}
+ */
+export async function drawPromptCard(gameId: string): Promise<PromptCard> {
+    const promptCardPool = firestore.collection(COLLECTION_GAMES)
+        .doc(gameId)
+        .collection(COLLECTION_CARD_POOL)
+        .doc(DOCUMENT_PROMPTS);
+
+    const prompts = await promptCardPool.get();
+    const promptPool = prompts.data() as CardPool;
+    const promptCardIndex = draw(promptPool.cards);
+
+    // Now save the pool of cards
+    await promptCardPool.update(promptPool);
+
+    // now fetch the actual prompt card
+    return cards.getPromptCard(promptCardIndex);
+}
+
+/**
+ * Draw a {@param count} of cards from the game's response card pool
+ * @param gameId the id of the game to pull from
+ * @param count the number of response cards to draw
+ */
+export async function drawResponseCards(gameId: string, count: number): Promise<ResponseCard[]> {
+    const responseCardPool = firestore.collection(COLLECTION_GAMES)
+        .doc(gameId)
+        .collection(COLLECTION_CARD_POOL)
+        .doc(DOCUMENT_RESPONSES);
+
+    const responses = await responseCardPool.get();
+    const responsePool = responses.data() as CardPool;
+    const responseCardIndexes = pickRandomCountFromArray(responsePool.cards, count);
+
+    await responseCardPool.update(responsePool);
+
+    return cards.getResponseCards(responseCardIndexes);
 }
 
 /**
