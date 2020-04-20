@@ -1,8 +1,7 @@
 import {COLLECTION_GAMES, COLLECTION_PLAYERS} from '../constants';
 import {PromptCard, ResponseCard} from "../../models/cards";
 import {firestore} from "../firestore";
-import * as admin from "firebase-admin";
-import FieldValue = admin.firestore.FieldValue;
+import {Player} from "../../models/player";
 
 /**
  * Set the hand for the provided user for a given game
@@ -34,8 +33,13 @@ export async function addToHand(gameId: string, playerId: string, responseCards:
         .collection(COLLECTION_PLAYERS)
         .doc(playerId);
 
-    await playerDoc.update({
-        hand: FieldValue.arrayUnion(responseCards)
+    await firestore.runTransaction(async (transaction) => {
+        const snapshots = await transaction.getAll(playerDoc);
+        const player = snapshots[0].data() as Player;
+
+        await transaction.update(playerDoc, {
+            hand: player.hand?.concat(responseCards)
+        });
     });
 }
 
@@ -51,7 +55,12 @@ export async function awardPrompt(gameId: string, playerId: string, promptCard: 
         .collection(COLLECTION_PLAYERS)
         .doc(playerId);
 
-    await playerDoc.update({
-        prizes: FieldValue.arrayUnion(promptCard)
-    })
+    await firestore.runTransaction(async (transaction) => {
+        const snapshots = await transaction.getAll(playerDoc);
+        const player = snapshots[0].data() as Player;
+
+        await transaction.update(playerDoc, {
+            prizes: player.prizes?.concat(promptCard)
+        });
+    });
 }
