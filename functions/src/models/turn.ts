@@ -12,6 +12,7 @@ export type TurnWinner = {
     playerId: string;
     playerName: string;
     playerAvatarUrl?: string;
+    isRandoCardrissian: boolean;
     promptCard: PromptCard;
     response: ResponseCard[];
 }
