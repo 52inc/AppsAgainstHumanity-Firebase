@@ -114,7 +114,7 @@ export async function handlePickWinner(data: any, context: CallableContext) {
                         // Give these new cards to each player
                         await firestore.players.addToHand(gameId, player.id, responseCards);
 
-                        console.log(`New cards dealt to ${player.name}`);
+                        console.log(`New cards(count=${dealCount}) dealt to ${player.name}`);
                     }
                 }
 
