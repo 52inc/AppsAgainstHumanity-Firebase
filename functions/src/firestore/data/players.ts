@@ -1,7 +1,6 @@
 import {COLLECTION_GAMES, COLLECTION_PLAYERS} from '../constants';
 import {PromptCard, ResponseCard} from "../../models/cards";
 import {firestore} from "../firestore";
-import {Player} from "../../models/player";
 import * as admin from "firebase-admin";
 import FieldValue = admin.firestore.FieldValue;
 
@@ -35,13 +34,8 @@ export async function addToHand(gameId: string, playerId: string, responseCards:
         .collection(COLLECTION_PLAYERS)
         .doc(playerId);
 
-    await firestore.runTransaction(async (transaction) => {
-        const snapshots = await transaction.getAll(playerDoc);
-        const player = snapshots[0].data() as Player;
-
-        await transaction.update(playerDoc, {
-            hand: player.hand?.concat(responseCards)
-        });
+    await playerDoc.update({
+        hand: FieldValue.arrayUnion(...responseCards)
     });
 }
 

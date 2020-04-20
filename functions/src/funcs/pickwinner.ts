@@ -107,7 +107,8 @@ export async function handlePickWinner(data: any, context: CallableContext) {
                 }
 
                 for (const player of players) {
-                    if (!player.isRandoCardrissian) {
+                    // ONLY deal new cards to players that actually played last round
+                    if (!player.isRandoCardrissian && player.id !== game.turn?.judgeId) {
                         // Draw random count of response cards
                         const responseCards = await firestore.games.drawResponseCards(gameId, dealCount);
 
