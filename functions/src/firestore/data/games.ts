@@ -85,6 +85,28 @@ export async function drawResponseCards(gameId: string, count: number): Promise<
 }
 
 /**
+ * Return all current responses of the current turn to their respective player's since we are likely
+ * resetting the turn and giving responses back
+ * @param game the game in which to return responses for, if the current turn is valid
+ */
+export async function returnResponseCards(game: Game): Promise<void> {
+    if (game.turn) {
+        const playerCollection = firestore.collection(COLLECTION_GAMES)
+            .doc(game.id)
+            .collection(COLLECTION_PLAYERS);
+
+        await firestore.runTransaction(async (transaction) => {
+            for (const [playerId, responses] of Object.entries<ResponseCard[]>(game.turn!.responses)) {
+                const playerDoc = playerCollection.doc(playerId);
+                transaction.update(playerDoc, {
+                    hand: FieldValue.arrayUnion(...responses)
+                })
+            }
+        });
+    }
+}
+
+/**
  * Set the judge rotation order for a game
  *
  * @param gameId the id of the game to set order for

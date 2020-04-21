@@ -1,6 +1,7 @@
 import * as functions from 'firebase-functions';
 import {handleStartGame} from "./funcs/startgame";
 import {handlePickWinner} from "./funcs/pickwinner";
+import {handleDownVote} from "./funcs/downvoteprompt";
 
 /**
  * Start Game - [Callable Function]
@@ -38,3 +39,22 @@ exports.startGame = functions.https.onCall(handleStartGame);
  * 4. Draw new cards for all players
  */
 exports.pickWinner = functions.https.onCall(handlePickWinner);
+
+/**
+ * Downvotes - [Firestore onUpdate Trigger]
+ *
+ * Resource: `games/{gameId}`
+ *
+ * Check if the update involves a change in the current (and same) turn's downvotes and if it does
+ * check if the downvotes is >= 2/3rds of the player count. If this is the case then we will reset the current
+ * turn and draw a new prompt card.
+ *
+ * 1. Check that turn doesn't change on this update
+ * 2. Check that the number downvotes has changed
+ * 3. Return all response cards that may have been submitted to the players
+ * 4. Draw a new prompt card
+ * 5. Reset the turn with new prompt, no downvotes, and no responses but keep the same judge
+ */
+exports.downvotePrompt = functions.firestore
+    .document('games/{gameId}')
+    .onUpdate(handleDownVote);

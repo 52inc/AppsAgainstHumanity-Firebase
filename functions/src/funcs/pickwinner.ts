@@ -16,6 +16,8 @@ import {RANDO_CARDRISSIAN} from "../models/player";
  *    c. Clear downvotes
  *    d. Draw Rando-Cardrissian, if present
  * 4. Draw new cards for all players
+ *
+ * TODO: Clean up this function to make it less monolith
  */
 export async function handlePickWinner(data: any, context: CallableContext) {
     const uid = context.auth?.uid;
@@ -115,7 +117,7 @@ export async function handlePickWinner(data: any, context: CallableContext) {
                         // Give these new cards to each player
                         await firestore.players.addToHand(gameId, player.id, responseCards);
 
-                        console.log(`New cards(count=${dealCount}) dealt to ${player.name}`);
+                        console.log(`New cards(count=${responseCards.length}) dealt to ${player.name}`);
                     }
                 }
 
