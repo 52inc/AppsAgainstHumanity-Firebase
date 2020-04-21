@@ -23,19 +23,24 @@ export async function handleDownVote(change: Change<DocumentSnapshot>, context: 
     const gameId = context.params.gameId;
 
     const previousGame = change.before.data() as Game;
-    const newGame = change.before.data() as Game;
+    const newGame = change.after.data() as Game;
+
+    console.log(`Previous Game(${JSON.stringify(previousGame)})`);
+    console.log(`New Game(${JSON.stringify(newGame)})`);
 
     const sameTurn = previousGame.turn?.promptCard?.cid === newGame.turn?.promptCard?.cid;
     if (sameTurn) {
         const previousDownVotes = previousGame.turn?.downvotes || [];
         const newDownVotes = newGame.turn?.downvotes || [];
+        console.log(`Comparing change in downvotes (previous=${previousDownVotes.length}, new=${newDownVotes.length})`);
         if (newDownVotes.length > previousDownVotes.length) {
             // Downvotes have changed pull the player list to check if > 2/3 of players have downvoted
             const players = await firestore.games.getPlayers(gameId);
             if (players) {
                 const numPlayers = players.length;
                 if (newDownVotes.length >= Math.floor(downVoteThreshold * numPlayers)) {
-                    await resetTurn(gameId, newGame, players!);
+                    console.log(`Threshold Met, resetting turn`);
+                    await resetTurn(gameId, newGame, players);
                 }
             }
         }
@@ -52,11 +57,11 @@ async function resetTurn(gameId: string, game: Game, players: Player[]): Promise
 
         // Reset the turn
         await firestore.games.setTurn(gameId, {
-            judgeId: game.turn!.judgeId,
+            judgeId: game.turn.judgeId,
             promptCard: newPromptCard,
             downvotes: [],
             responses: {},
-            winner: game.turn!.winner,
+            winner: game.turn.winner,
         });
 
         console.log(`The current turn has been reset for Game(${game.id})!`)
