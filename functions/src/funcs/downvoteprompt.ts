@@ -2,7 +2,9 @@ import {Change, EventContext} from "firebase-functions/lib/cloud-functions";
 import {DocumentSnapshot} from "firebase-functions/lib/providers/firestore";
 import {Game} from "../models/game";
 import * as firestore from "../firestore/firestore";
-import {Player} from "../models/player";
+import {Player, RANDO_CARDRISSIAN} from "../models/player";
+import {getSpecial} from "../models/cards";
+import {Turn} from "../models/turn";
 
 const downVoteThreshold = 2 / 3;
 
@@ -50,19 +52,33 @@ export async function handleDownVote(change: Change<DocumentSnapshot>, context: 
 async function resetTurn(gameId: string, game: Game, players: Player[]): Promise<void> {
     if (game.turn) {
         // Return any responses to players
-        await firestore.games.returnResponseCards(game);
+        await firestore.games.returnResponseCards(gameId, game);
 
         // Re-draw a new prompt card
         const newPromptCard = await firestore.games.drawPromptCard(gameId);
 
-        // Reset the turn
-        await firestore.games.setTurn(gameId, {
+        const turn: Turn= {
             judgeId: game.turn.judgeId,
             promptCard: newPromptCard,
             downvotes: [],
             responses: {},
             winner: game.turn.winner,
-        });
+        };
+
+        // Go ahead and set Rando Cardrissian's response if he is a part of this game
+        if (players.find((p) => p.isRandoCardrissian)) {
+            let drawCount = 1;
+            if (getSpecial(newPromptCard.special) === 'PICK 2') {
+                drawCount = 2;
+            } else if (getSpecial(newPromptCard.special) === 'DRAW 2, PICK 3') {
+                drawCount = 3;
+            }
+            turn.responses[RANDO_CARDRISSIAN] = await firestore.games.drawResponseCards(gameId, drawCount);
+            console.log("Rando Cardrissian has been dealt into the next turn")
+        }
+
+        // Reset the turn
+        await firestore.games.setTurn(gameId, turn);
 
         console.log(`The current turn has been reset for Game(${game.id})!`)
     }

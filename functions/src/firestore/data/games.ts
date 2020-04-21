@@ -6,7 +6,7 @@ import {
     DOCUMENT_RESPONSES
 } from '../constants';
 import {Game, GameState} from "../../models/game";
-import {Player} from "../../models/player";
+import {Player, RANDO_CARDRISSIAN} from "../../models/player";
 import {Turn} from "../../models/turn";
 import {cards, firestore} from "../firestore";
 import {PromptCard, ResponseCard} from "../../models/cards";
@@ -87,20 +87,23 @@ export async function drawResponseCards(gameId: string, count: number): Promise<
 /**
  * Return all current responses of the current turn to their respective player's since we are likely
  * resetting the turn and giving responses back
+ * @param gameId the document id of the game
  * @param game the game in which to return responses for, if the current turn is valid
  */
-export async function returnResponseCards(game: Game): Promise<void> {
+export async function returnResponseCards(gameId: string, game: Game): Promise<void> {
     if (game.turn) {
         const playerCollection = firestore.collection(COLLECTION_GAMES)
-            .doc(game.id)
+            .doc(gameId)
             .collection(COLLECTION_PLAYERS);
 
         await firestore.runTransaction(async (transaction) => {
             for (const [playerId, responses] of Object.entries<ResponseCard[]>(game.turn!.responses)) {
-                const playerDoc = playerCollection.doc(playerId);
-                transaction.update(playerDoc, {
-                    hand: FieldValue.arrayUnion(...responses)
-                })
+                if (playerId !== RANDO_CARDRISSIAN) {
+                    const playerDoc = playerCollection.doc(playerId);
+                    transaction.update(playerDoc, {
+                        hand: FieldValue.arrayUnion(...responses)
+                    })
+                }
             }
         });
     }
