@@ -5,9 +5,23 @@
 **Location:** `/functions`
 
 ### `startGame({'game_id': 'some_game_id'})`
+**Type:** Callable HTTPS
 
-This function is a Callable HTTPS function for seeding the start of a game. It will take the initialized set of card sets and pull a random selection of cards to seed the game with. It will then generate the first turn, and deal the cards from the pool to all the players.
+Seed the start of a game. It will take the initialized set of card sets and pull a random selection of cards to seed the game with. It will then generate the first turn, and deal the cards from the pool to all the players.
 
-### `pickWinner({'game_id': 'some_game_id', 'player_id': 'winning_player_id}`
+### `pickWinner({'game_id': 'some_game_id', 'player_id': 'winning_player_id})`
+**Type:** Callable HTTPS
 
-This function is a Callable HTTPS function for the judge to pick the winner of the turn with.
+Let's the judge pick the winner of the turn.
+
+### `reDealHand({'game_id': 'some_game_id'})`
+**Type:** Callable HTTPS
+
+Exchange 1 prize card for a new hand.
+
+### `downvotePrompt()`
+**Type:** Firestore `onUpdate()`
+**Resource:** `games/{gameId}`
+
+Check if there have been 2/3 majority downvotes on the current prompt card. If so, it will return any submitted responses and reset the turn with a new prompt maintaining the current judge.
+

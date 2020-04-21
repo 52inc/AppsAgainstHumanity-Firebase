@@ -23,6 +23,26 @@ export async function setHand(gameId: string, playerId: string, responseCards: R
 }
 
 /**
+ * Re-deal hand for the provided user for a given game and remove a prize card as price
+ *
+ * @param gameId the id of the game in which the context of this action is being made
+ * @param playerId the id of the player to update
+ * @param prize the prize to remove as cost
+ * @param responseCards the list of {@link ResponseCard} to update as the player's hand
+ */
+export async function reDealHand(gameId: string, playerId: string, prize: PromptCard, responseCards: ResponseCard[]): Promise<void> {
+    const playerDoc = firestore.collection(COLLECTION_GAMES)
+        .doc(gameId)
+        .collection(COLLECTION_PLAYERS)
+        .doc(playerId);
+
+    await playerDoc.update({
+        hand: responseCards,
+        prizes: FieldValue.arrayRemove(prize)
+    });
+}
+
+/**
  * Add a list of {@link ResponseCard}s to a given player's hand
  * @param gameId the id of the game this is context to
  * @param playerId the id of the player to add to

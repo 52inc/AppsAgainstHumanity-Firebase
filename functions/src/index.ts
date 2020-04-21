@@ -2,6 +2,7 @@ import * as functions from 'firebase-functions';
 import {handleStartGame} from "./funcs/startgame";
 import {handlePickWinner} from "./funcs/pickwinner";
 import {handleDownVote} from "./funcs/downvoteprompt";
+import {handleReDealHand} from "./funcs/redealhand";
 
 /**
  * Start Game - [Callable Function]
@@ -39,6 +40,13 @@ exports.startGame = functions.https.onCall(handleStartGame);
  * 4. Draw new cards for all players
  */
 exports.pickWinner = functions.https.onCall(handlePickWinner);
+
+/**
+ * Re-Deal Hand - [Callable Function]
+ *
+ * This function will re-deal a user's hand in exchange for 1 prize card
+ */
+exports.reDealHand = functions.https.onCall(handleReDealHand);
 
 /**
  * Downvotes - [Firestore onUpdate Trigger]

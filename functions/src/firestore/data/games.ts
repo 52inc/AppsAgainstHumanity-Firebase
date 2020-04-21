@@ -43,6 +43,21 @@ export async function getPlayers(gameId: string): Promise<Player[] | undefined> 
 }
 
 /**
+ * Fetch a {@link Player} for a {@link Game} by the {gameId}
+ * @param gameId the id of the game to get all the players for
+ * @param playerId the id of the player to fetch
+ */
+export async function getPlayer(gameId: string, playerId: string): Promise<Player | undefined> {
+    const playerDoc = await firestore.collection(COLLECTION_GAMES)
+        .doc(gameId)
+        .collection(COLLECTION_PLAYERS)
+        .doc(playerId);
+
+    const playerSnapshot = await playerDoc.get();
+    return playerSnapshot.data() as Player;
+}
+
+/**
  * Draw a new prompt card from the game pool by removing it
  * @param gameId the game id to draw from
  * @return a {@link Promise} of the {@link PromptCard}
