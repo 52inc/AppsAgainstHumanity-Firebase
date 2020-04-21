@@ -25,3 +25,7 @@ Exchange 1 prize card for a new hand.
 
 Check if there have been 2/3 majority downvotes on the current prompt card. If so, it will return any submitted responses and reset the turn with a new prompt maintaining the current judge.
 
+### `accountDeletion()`
+**Type:** Authentication `onDelete()`
+
+If a user deletes his/her/they account, then delete all the user data from firestore as well as remove them from participating games.

@@ -3,6 +3,7 @@ import {handleStartGame} from "./funcs/startgame";
 import {handlePickWinner} from "./funcs/pickwinner";
 import {handleDownVote} from "./funcs/downvoteprompt";
 import {handleReDealHand} from "./funcs/redealhand";
+import {handleAccountDeletion} from "./funcs/accountdeletion";
 
 /**
  * Start Game - [Callable Function]
@@ -66,3 +67,11 @@ exports.reDealHand = functions.https.onCall(handleReDealHand);
 exports.downvotePrompt = functions.firestore
     .document('games/{gameId}')
     .onUpdate(handleDownVote);
+
+/**
+ * Account Deletion - [Authentication Trigger]
+ *
+ * This function will listen to account deletions and delete all of their user data
+ * stored in firestore
+ */
+exports.accountDeletion = functions.auth.user().onDelete(handleAccountDeletion);
