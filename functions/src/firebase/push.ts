@@ -84,7 +84,7 @@ export async function sendNewRoundMessage(game: Game, newTurn: Turn, players: Pl
 
     await sendNewJudgeMessage(game, judgePushToken);
     await sendWinnerMessage(game, winnerToken);
-    await sendAllMessage(game, game.round + 1, otherTokens);
+    await sendAllMessage(game, newTurn,game.round + 1, otherTokens);
 }
 
 /**
@@ -102,8 +102,8 @@ export async function sendGameOverMessage(game: Game, players: Player[], gameWin
             gameId: game.id,
         },
         notification: {
-            title: `Game - ${game.gid}`,
-            body: `Game Over! The winner was ${gameWinningPlayer.name}`,
+            title: `Game Over - ${game.gid}`,
+            body: `The winner was ${gameWinningPlayer.name}`,
             imageUrl: gameWinningPlayer.avatarUrl
         },
         android: {
@@ -146,8 +146,8 @@ async function sendWinnerMessage(game: Game, tokens: string[]) {
             gameId: game.id,
         },
         notification: {
-            title: `Game - ${game.gid}`,
-            body: `You won! Prize: \"${game.turn?.promptCard?.text}\"`
+            title: `You won! - ${game.gid}`,
+            body: `\"${game.turn?.promptCard?.text}\"`
         },
         android: {
             notification: {
@@ -160,7 +160,7 @@ async function sendWinnerMessage(game: Game, tokens: string[]) {
     console.log('Sending Winner Message!')
 }
 
-async function sendAllMessage(game: Game, round: number, tokens: string[]) {
+async function sendAllMessage(game: Game, newTurn: Turn, round: number, tokens: string[]) {
     await sendMulticastMessage({
         tokens: tokens,
         data: {
@@ -168,8 +168,8 @@ async function sendAllMessage(game: Game, round: number, tokens: string[]) {
             gameId: game.id,
         },
         notification: {
-            title: `Game - ${game.gid}`,
-            body: `Next round started - #${round}`
+            title: `Next Round #${round} - ${game.gid}`,
+            body: `\"${newTurn.promptCard.text}\"`
         },
         android: {
             notification: {
