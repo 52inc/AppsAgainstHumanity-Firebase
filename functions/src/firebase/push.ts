@@ -25,8 +25,8 @@ export async function sendGameStartedMessage(game: Game, players: Player[], firs
             gameId: game.id,
         },
         notification: {
-            title: `Game - ${game.gid}`,
-            body: `Game Started! First judge is ${firstJudge?.name}`,
+            title: `Game Started - ${game.gid}`,
+            body: `First judge is ${firstJudge?.name}`,
             imageUrl: firstJudge?.avatarUrl
         },
         android: {

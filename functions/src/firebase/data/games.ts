@@ -139,7 +139,7 @@ export async function clearDownvotes(gameId: string) {
         .collection(COLLECTION_DOWNVOTES)
         .doc(DOCUMENT_TALLY);
 
-    await tallyDoc.update({
+    await tallyDoc.set({
         'votes': []
     });
 }
