@@ -110,6 +110,9 @@ export async function handlePickWinner(data: any, context: CallableContext) {
                 });
                 console.log(`Next turn has now been set!`);
 
+                // Clear downvotes
+                await firebase.games.clearDownvotes(gameId);
+
                 // Award previous game's prompt to winning player
                 await firebase.players.awardPrompt(gameId, winningPlayerId, game.turn!.promptCard);
 

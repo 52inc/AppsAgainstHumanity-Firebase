@@ -1,9 +1,9 @@
 import {
-    COLLECTION_CARD_POOL,
+    COLLECTION_CARD_POOL, COLLECTION_DOWNVOTES,
     COLLECTION_GAMES,
     COLLECTION_PLAYERS, COLLECTION_USERS,
     DOCUMENT_PROMPTS,
-    DOCUMENT_RESPONSES
+    DOCUMENT_RESPONSES, DOCUMENT_TALLY
 } from '../constants';
 import {Game, GameState} from "../../models/game";
 import {Player, RANDO_CARDRISSIAN} from "../../models/player";
@@ -133,19 +133,15 @@ export async function returnResponseCards(gameId: string, game: Game): Promise<v
     }
 }
 
-/**
- * Set the judge rotation order for a game
- *
- * @param gameId the id of the game to set order for
- * @param judgingOrder the judging order array of player id's (excluding rando cardrissian)
- */
-export async function setJudgeRotation(gameId: string, judgingOrder: string[]): Promise<void> {
-    const gameDoc = firestore.collection(COLLECTION_GAMES)
-        .doc(gameId);
+export async function clearDownvotes(gameId: string) {
+    const tallyDoc = firestore.collection(COLLECTION_GAMES)
+        .doc(gameId)
+        .collection(COLLECTION_DOWNVOTES)
+        .doc(DOCUMENT_TALLY);
 
-    await gameDoc.update({
-        judgeRotation: judgingOrder
-    })
+    await tallyDoc.update({
+        'votes': []
+    });
 }
 
 /**
@@ -160,21 +156,6 @@ export async function update(gameId: string, data: FirebaseFirestore.UpdateData)
         .doc(gameId);
 
     await gameDoc.update(data);
-}
-
-/**
- * Update the game state, specifying what you want to udpate with
- *
- * @see admin.firestore.DocumentReference#update
- * @param transaction a Firestore transaction to perform this update in
- * @param gameId the game to update
- * @param data the data to update
- */
-export function transactionUpdate(transaction: admin.firestore.Transaction, gameId: string, data: FirebaseFirestore.UpdateData): admin.firestore.Transaction {
-    const gameDoc = firestore.collection(COLLECTION_GAMES)
-        .doc(gameId);
-
-    return transaction.update(gameDoc, data);
 }
 
 /**
