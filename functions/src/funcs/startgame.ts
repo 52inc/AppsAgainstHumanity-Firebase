@@ -1,5 +1,5 @@
 import {CallableContext} from "firebase-functions/lib/providers/https";
-import * as firestore from '../firestore/firestore';
+import * as firebase from '../firebase/firebase';
 import {CardSet, getSpecial} from "../models/cards";
 import {shuffle} from "../util/shuffle";
 import {dealResponses, draw, pickRandomCountFromArray} from "../util/deal";
@@ -7,11 +7,7 @@ import {Turn} from "../models/turn";
 import {Player, RANDO_CARDRISSIAN} from "../models/player";
 import {flatMap} from "../util/flatmap";
 import {error} from "../util/error";
-
-type CardPool = {
-    prompts: string[];
-    responses: string[];
-}
+import {GameCardPool} from "../models/pool";
 
 /**
  * Start Game - [Callable Function]
@@ -29,24 +25,25 @@ export async function handleStartGame(data: any, context: CallableContext) {
     if (uid) {
         if (gameId) {
             // Load the game for this gameId and verify that it is in the correct state
-            const game = await firestore.games.getGame(gameId);
+            const game = await firebase.games.getGame(gameId);
             if (game?.state === 'waitingRoom') {
+                game.id = gameId;
                 // Game exists and is in the appropriate state. Now we will seed the card pull
-                const players = await firestore.games.getPlayers(gameId);
+                const players = await firebase.games.getPlayers(gameId);
                 if (players && players.length > 2) {
                     // Okay, enough players are in this game, now seed it
-                    const cardSets = await firestore.cards.getCardSet(...game.cardSets);
+                    const cardSets = await firebase.cards.getCardSet(...game.cardSets);
                     if (cardSets.length > 0) {
 
                         // Update the state to 'starting' so the clients reflect this state appropriately
-                        await firestore.games.updateState(gameId, 'starting');
+                        await firebase.games.updateState(gameId, 'starting');
 
                         // combine and shuffle all prompt cards
                         const promptCardIndexes = combineAndShuffleIndexes(cardSets, (set) => set.promptIndexes ?? []);
                         const responseCardIndexes = combineAndShuffleIndexes(cardSets, (set) => set.responseIndexes ?? []);
                         const promptCards = pickRandomCountFromArray(promptCardIndexes, promptCardSeedCount(players.length));
                         const responseCards = pickRandomCountFromArray(responseCardIndexes, responseCardSeedCount(players.length));
-                        const cardPool: CardPool = { prompts: promptCards, responses: responseCards };
+                        const cardPool: GameCardPool = { prompts: promptCards, responses: responseCards };
 
                         // Deal 10 cards to every player, except Rando Cardrissian
                         await dealPlayersIn(gameId, players, cardPool);
@@ -54,12 +51,12 @@ export async function handleStartGame(data: any, context: CallableContext) {
                         /*
                          * Generate the turn
                          */
-                        await generateFirstTurn(gameId, players, cardPool);
+                        const firstTurn = await generateFirstTurn(gameId, players, cardPool);
 
                         /*
                          * Seed Card Pool
                          */
-                        await firestore.games.seedCardPool(gameId, cardPool.prompts, cardPool.responses);
+                        await firebase.games.seedCardPool(gameId, cardPool.prompts, cardPool.responses);
                         console.log(`The Game(${gameId}) has now been seeded with ${cardPool.prompts.length} Prompt cards and ${cardPool.responses.length} Response cards`);
 
                         /*
@@ -68,7 +65,10 @@ export async function handleStartGame(data: any, context: CallableContext) {
 
                         // Now that we have dealt in every player, set judging rotation, setup first turn, and seeded
                         // the card pool it's now time to update the card's set to 'inProgress'
-                        await firestore.games.updateState(gameId, 'inProgress', players);
+                        await firebase.games.updateState(gameId, 'inProgress', players);
+
+                        // Send push notification to participants
+                        await firebase.push.sendGameStartedMessage(game, players, firstTurn);
 
                         // FINISH! Return some arbitrary result that the app won't deal with.
                         return {
@@ -101,16 +101,16 @@ export async function handleStartGame(data: any, context: CallableContext) {
  * @param players the list of participating players in this game
  * @param cardPool the pool of cards to deal from
  */
-async function dealPlayersIn(gameId: string, players: Player[], cardPool: CardPool): Promise<void> {
+async function dealPlayersIn(gameId: string, players: Player[], cardPool: GameCardPool): Promise<void> {
     // Deal 10 cards to every player, except Rando Cardrissian
     for (const player of players) {
         if (!player.isRandoCardrissian) {
             // Draw and fetch hand
             const handIndexes = pickRandomCountFromArray(cardPool.responses, 10);
-            const hand = await firestore.cards.getResponseCards(handIndexes);
+            const hand = await firebase.cards.getResponseCards(handIndexes);
 
-            // Update player's hand in firestore
-            await firestore.players.setHand(gameId, player.id, hand);
+            // Update player's hand in firebase
+            await firebase.players.setHand(gameId, player.id, hand);
 
             console.log(`Hand dealt for ${player.name}`);
         } else {
@@ -125,17 +125,19 @@ async function dealPlayersIn(gameId: string, players: Player[], cardPool: CardPo
  * @param players the list of players participating in this game
  * @param cardPool the pool of cards to draw from
  */
-async function generateFirstTurn(gameId: string, players: Player[], cardPool: CardPool): Promise<void> {
+async function generateFirstTurn(
+    gameId: string,
+    players: Player[],
+    cardPool: GameCardPool
+): Promise<Turn> {
     const judgeOrder = players
         .filter((p) => !p.isRandoCardrissian)
         .map((p) => p.id);
     shuffle(judgeOrder);
-    await firestore.games.setJudgeRotation(gameId, judgeOrder);
-    console.log("Judging rotation is now set");
 
     // Draw the prompt card
     const promptIndex = draw(cardPool.prompts);
-    const promptCard = await firestore.cards.getPromptCard(promptIndex);
+    const promptCard = await firebase.cards.getPromptCard(promptIndex);
 
     // Create and save the turn
     const turn: Turn = {
@@ -147,12 +149,18 @@ async function generateFirstTurn(gameId: string, players: Player[], cardPool: Ca
     // Go ahead and set Rando Cardrissian's response if he is a part of this game
     if (players.find((p) => p.isRandoCardrissian)) {
         const randoResponseCardIndexes = dealResponses(cardPool.responses, getSpecial(promptCard.special));
-        turn.responses[RANDO_CARDRISSIAN] = await firestore.cards.getResponseCards(randoResponseCardIndexes);
+        turn.responses[RANDO_CARDRISSIAN] = await firebase.cards.getResponseCards(randoResponseCardIndexes);
         console.log("Rando Cardrissian has been dealt into the first turn")
     }
 
-    await firestore.games.setTurn(gameId, turn);
+    await firebase.games.update(gameId, {
+        turn: turn,
+        judgeRotation: judgeOrder
+    });
+    console.log("Judging rotation is now set");
     console.log(`The first turn is now set for ${gameId}`);
+
+    return turn;
 }
 
 /**

@@ -1,8 +1,8 @@
 import {EventContext} from "firebase-functions/lib/cloud-functions";
 import {UserRecord} from "firebase-functions/lib/providers/auth";
 import * as admin from "firebase-admin";
-import {firestore} from "../firestore/firestore";
-import {COLLECTION_DEVICES, COLLECTION_GAMES, COLLECTION_PLAYERS, COLLECTION_USERS} from "../firestore/constants";
+import {firestore} from "../firebase/firebase";
+import {COLLECTION_DEVICES, COLLECTION_GAMES, COLLECTION_PLAYERS, COLLECTION_USERS} from "../firebase/constants";
 import {UserGame} from "../models/usergame";
 import {Game} from "../models/game";
 import FieldValue = admin.firestore.FieldValue;
@@ -61,11 +61,11 @@ async function removePlayerFromGame(transaction: admin.firestore.Transaction, us
            judgeRotation: FieldValue.arrayRemove(uid)
         });
 
-        const playerDoc = gameDoc.collection(COLLECTION_PLAYERS)
-            .doc(uid);
+        const playerDoc = gameDoc.collection(COLLECTION_PLAYERS).doc(uid);
         transaction.update(playerDoc, {
-            'avatarUrl': null,
-            'name': '[DELETED]'
+            isInactive: true,
+            avatarUrl: null,
+            name: '[DELETED]'
         })
     }
 }

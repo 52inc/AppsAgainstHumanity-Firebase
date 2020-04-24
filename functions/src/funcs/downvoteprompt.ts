@@ -1,10 +1,10 @@
 import {Change, EventContext} from "firebase-functions/lib/cloud-functions";
 import {DocumentSnapshot} from "firebase-functions/lib/providers/firestore";
-import {Game} from "../models/game";
-import * as firestore from "../firestore/firestore";
+import * as firestore from "../firebase/firebase";
 import {Player, RANDO_CARDRISSIAN} from "../models/player";
 import {getSpecial} from "../models/cards";
 import {Turn} from "../models/turn";
+import {Tally} from "../models/tally";
 
 const downVoteThreshold = 2 / 3;
 
@@ -24,43 +24,40 @@ const downVoteThreshold = 2 / 3;
 export async function handleDownVote(change: Change<DocumentSnapshot>, context: EventContext) {
     const gameId = context.params.gameId;
 
-    const previousGame = change.before.data() as Game;
-    const newGame = change.after.data() as Game;
+    const previousTally = change.before.data() as Tally;
+    const newTally = change.after.data() as Tally;
 
-    console.log(`Previous Game(${JSON.stringify(previousGame)})`);
-    console.log(`New Game(${JSON.stringify(newGame)})`);
+    console.log(`Previous Game(${JSON.stringify(previousTally)})`);
+    console.log(`New Game(${JSON.stringify(newTally)})`);
 
-    const sameTurn = previousGame.turn?.promptCard?.cid === newGame.turn?.promptCard?.cid;
-    if (sameTurn) {
-        const previousDownVotes = previousGame.turn?.downvotes || [];
-        const newDownVotes = newGame.turn?.downvotes || [];
-        console.log(`Comparing change in downvotes (previous=${previousDownVotes.length}, new=${newDownVotes.length})`);
-        if (newDownVotes.length > previousDownVotes.length) {
-            // Downvotes have changed pull the player list to check if > 2/3 of players have downvoted
-            const players = await firestore.games.getPlayers(gameId);
-            if (players) {
-                const numPlayers = players.length;
-                if (newDownVotes.length >= Math.floor(downVoteThreshold * numPlayers)) {
-                    console.log(`Threshold Met, resetting turn`);
-                    await resetTurn(gameId, newGame, players);
-                }
+    const previousDownVotes = previousTally.votes;
+    const newDownVotes = newTally.votes;
+    console.log(`Comparing change in downvotes (previous=${previousDownVotes.length}, new=${newDownVotes.length})`);
+    if (newDownVotes.length > previousDownVotes.length) {
+        // Downvotes have changed pull the player list to check if > 2/3 of players have downvoted
+        const players = await firestore.games.getPlayers(gameId);
+        if (players) {
+            const numPlayers = players.length;
+            if (newDownVotes.length >= Math.floor(downVoteThreshold * numPlayers)) {
+                console.log(`Threshold Met, resetting turn`);
+                await resetTurn(gameId, players);
             }
         }
     }
 }
 
-async function resetTurn(gameId: string, game: Game, players: Player[]): Promise<void> {
-    if (game.turn) {
+async function resetTurn(gameId: string, players: Player[]): Promise<void> {
+    const game = await firestore.games.getGame(gameId);
+    if (game && game.turn) {
         // Return any responses to players
         await firestore.games.returnResponseCards(gameId, game);
 
         // Re-draw a new prompt card
         const newPromptCard = await firestore.games.drawPromptCard(gameId);
 
-        const turn: Turn= {
+        const turn: Turn = {
             judgeId: game.turn.judgeId,
             promptCard: newPromptCard,
-            downvotes: [],
             responses: {},
             winner: game.turn.winner,
         };
@@ -78,7 +75,12 @@ async function resetTurn(gameId: string, game: Game, players: Player[]): Promise
         }
 
         // Reset the turn
-        await firestore.games.setTurn(gameId, turn);
+        await firestore.games.update(gameId, {
+            turn: turn
+        });
+
+        // Send Push
+        await firestore.push.sendTurnResetMessage(game, players, turn);
 
         console.log(`The current turn has been reset for Game(${game.id})!`)
     }

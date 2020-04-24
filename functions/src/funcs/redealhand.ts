@@ -1,6 +1,6 @@
 import {CallableContext} from "firebase-functions/lib/providers/https";
 import {error} from "../util/error";
-import * as firestore from "../firestore/firestore";
+import * as firestore from "../firebase/firebase";
 
 /**
  * Re-Deal Hand - [Callable Function]

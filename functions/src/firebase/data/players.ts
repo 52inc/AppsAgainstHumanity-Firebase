@@ -1,6 +1,6 @@
 import {COLLECTION_GAMES, COLLECTION_PLAYERS} from '../constants';
 import {PromptCard, ResponseCard} from "../../models/cards";
-import {firestore} from "../firestore";
+import {firestore} from "../firebase";
 import * as admin from "firebase-admin";
 import FieldValue = admin.firestore.FieldValue;
 
@@ -44,17 +44,23 @@ export async function reDealHand(gameId: string, playerId: string, prize: Prompt
 
 /**
  * Add a list of {@link ResponseCard}s to a given player's hand
+ * @param transaction
  * @param gameId the id of the game this is context to
  * @param playerId the id of the player to add to
  * @param responseCards the cards to add to their hand
  */
-export async function addToHand(gameId: string, playerId: string, responseCards: ResponseCard[]): Promise<void> {
+export function addToHand(
+    transaction: admin.firestore.Transaction,
+    gameId: string,
+    playerId: string,
+    responseCards: ResponseCard[]
+) {
     const playerDoc = firestore.collection(COLLECTION_GAMES)
         .doc(gameId)
         .collection(COLLECTION_PLAYERS)
         .doc(playerId);
 
-    await playerDoc.update({
+    transaction.update(playerDoc, {
         hand: FieldValue.arrayUnion(...responseCards)
     });
 }

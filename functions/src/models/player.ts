@@ -7,6 +7,7 @@ export type Player = {
     name: string;
     avatarUrl?: string;
     isRandoCardrissian: boolean;
+    isInactive?: boolean;
     hand?: ResponseCard[];
     prizes?: PromptCard[];
 }

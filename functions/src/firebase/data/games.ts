@@ -7,8 +7,7 @@ import {
 } from '../constants';
 import {Game, GameState} from "../../models/game";
 import {Player, RANDO_CARDRISSIAN} from "../../models/player";
-import {Turn} from "../../models/turn";
-import {cards, firestore} from "../firestore";
+import {cards, firestore} from "../firebase";
 import {PromptCard, ResponseCard} from "../../models/cards";
 import {CardPool} from "../../models/pool";
 import {draw, pickRandomCountFromArray} from "../../util/deal";
@@ -79,6 +78,16 @@ export async function drawPromptCard(gameId: string): Promise<PromptCard> {
     return cards.getPromptCard(promptCardIndex);
 }
 
+export async function getResponseCardPool(gameId: string): Promise<CardPool> {
+    const responseCardPool = firestore.collection(COLLECTION_GAMES)
+        .doc(gameId)
+        .collection(COLLECTION_CARD_POOL)
+        .doc(DOCUMENT_RESPONSES);
+
+    const responses = await responseCardPool.get();
+    return responses.data() as CardPool;
+}
+
 /**
  * Draw a {@param count} of cards from the game's response card pool
  * @param gameId the id of the game to pull from
@@ -140,18 +149,32 @@ export async function setJudgeRotation(gameId: string, judgingOrder: string[]): 
 }
 
 /**
- * Set the turn for a game
+ * Update the game state, specifying what you want to udpate with
  *
- * @param gameId the id of the game to set the turn for
- * @param turn the turn to set
+ * @see admin.firestore.DocumentReference#update
+ * @param gameId the game to update
+ * @param data the data to update
  */
-export async function setTurn(gameId: string, turn: Turn): Promise<void> {
+export async function update(gameId: string, data: FirebaseFirestore.UpdateData) {
     const gameDoc = firestore.collection(COLLECTION_GAMES)
         .doc(gameId);
 
-    await gameDoc.update({
-        turn: turn
-    })
+    await gameDoc.update(data);
+}
+
+/**
+ * Update the game state, specifying what you want to udpate with
+ *
+ * @see admin.firestore.DocumentReference#update
+ * @param transaction a Firestore transaction to perform this update in
+ * @param gameId the game to update
+ * @param data the data to update
+ */
+export function transactionUpdate(transaction: admin.firestore.Transaction, gameId: string, data: FirebaseFirestore.UpdateData): admin.firestore.Transaction {
+    const gameDoc = firestore.collection(COLLECTION_GAMES)
+        .doc(gameId);
+
+    return transaction.update(gameDoc, data);
 }
 
 /**
@@ -189,15 +212,6 @@ export async function updateState(gameId: string, state: GameState, players: Pla
     }
 }
 
-export async function incrementRound(gameId: string): Promise<void> {
-    const gameDoc = firestore.collection(COLLECTION_GAMES)
-        .doc(gameId);
-
-    await gameDoc.update({
-        round: FieldValue.increment(1)
-    });
-}
-
 export async function setGameWinner(gameId: string, playerId: string): Promise<void> {
     const gameDoc = firestore.collection(COLLECTION_GAMES)
         .doc(gameId);
@@ -216,10 +230,12 @@ export async function setGameWinner(gameId: string, playerId: string): Promise<v
  */
 export async function seedCardPool(
     gameId: string,
-    promptCardIndexes: string[],
-    responseCardIndexes: string[]
+    promptCardIndexes: string[] = [],
+    responseCardIndexes: string[] = []
 ): Promise<void> {
-    console.log(`Seeding Game(${gameId}) Card Pool`);
+    if (promptCardIndexes.length > 0 && responseCardIndexes.length > 0) {
+        console.log(`Seeding Game(${gameId}) Card Pool`);
+    }
     console.log(`Prompts: ${promptCardIndexes}`);
     console.log(`Responses: ${responseCardIndexes}`);
 
@@ -227,13 +243,17 @@ export async function seedCardPool(
         .doc(gameId)
         .collection(COLLECTION_CARD_POOL);
 
-    await cardPoolCollection.doc(DOCUMENT_PROMPTS)
-        .set({
-            cards: (promptCardIndexes ?? [])
-        });
+    if (promptCardIndexes.length > 0) {
+        await cardPoolCollection.doc(DOCUMENT_PROMPTS)
+            .set({
+                cards: (promptCardIndexes ?? [])
+            });
+    }
 
-    await cardPoolCollection.doc(DOCUMENT_RESPONSES)
-        .set({
-            cards: (responseCardIndexes ?? [])
-        });
+    if (responseCardIndexes.length > 0) {
+        await cardPoolCollection.doc(DOCUMENT_RESPONSES)
+            .set({
+                cards: (responseCardIndexes ?? [])
+            });
+    }
 }

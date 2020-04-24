@@ -4,7 +4,6 @@ export type Turn = {
     judgeId: string;
     promptCard: PromptCard;
     responses: {[playerId: string]: ResponseCard[]};
-    downvotes?: string[];
     winner?: TurnWinner;
 }
 

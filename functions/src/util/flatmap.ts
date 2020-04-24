@@ -6,3 +6,11 @@
 export function flatMap<T, R>(array: T[], selector: (item: T) => R[]): R[] {
     return Array.prototype.concat(...array.map(selector));
 }
+
+/**
+ * Flatten an array of arrays into a single array
+ * @param array
+ */
+export function flatten<T>(array: T[][]): T[] {
+    return Array.prototype.concat(...array)
+}

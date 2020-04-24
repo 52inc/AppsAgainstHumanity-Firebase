@@ -52,7 +52,7 @@ exports.reDealHand = functions.https.onCall(handleReDealHand);
 /**
  * Downvotes - [Firestore onUpdate Trigger]
  *
- * Resource: `games/{gameId}`
+ * Resource: `games/{gameId}/downvotes/{tally}`
  *
  * Check if the update involves a change in the current (and same) turn's downvotes and if it does
  * check if the downvotes is >= 2/3rds of the player count. If this is the case then we will reset the current
@@ -65,13 +65,13 @@ exports.reDealHand = functions.https.onCall(handleReDealHand);
  * 5. Reset the turn with new prompt, no downvotes, and no responses but keep the same judge
  */
 exports.downvotePrompt = functions.firestore
-    .document('games/{gameId}')
+    .document('games/{gameId}/downvotes/tally')
     .onUpdate(handleDownVote);
 
 /**
  * Account Deletion - [Authentication Trigger]
  *
  * This function will listen to account deletions and delete all of their user data
- * stored in firestore
+ * stored in firebase
  */
 exports.accountDeletion = functions.auth.user().onDelete(handleAccountDeletion);
