@@ -129,9 +129,9 @@ export async function handlePickWinner(data: any, context: CallableContext) {
                 if (gameWinningPlayer) {
                     await firebase.games.setGameWinner(gameId, gameWinningPlayer.id);
                     await firebase.games.updateState(gameId, 'completed', players);
-                    await firebase.push.sendGameOverMessage(game, players!, gameWinningPlayer);
+                    await firebase.push.sendGameOverMessage(game, players, gameWinningPlayer);
                 } else {
-                    await firebase.push.sendNewRoundMessage(game, turn, players!);
+                    await firebase.push.sendNewRoundMessage(game, turn, players);
                 }
 
                 return {
