@@ -104,7 +104,7 @@ export async function sendGameOverMessage(game: Game, players: Player[], gameWin
         notification: {
             title: `Game Over - ${game.gid}`,
             body: `The winner was ${gameWinningPlayer.name}`,
-            imageUrl: gameWinningPlayer.avatarUrl
+            imageUrl: gameWinningPlayer.avatarUrl && gameWinningPlayer.avatarUrl.length > 0 ? gameWinningPlayer.avatarUrl : undefined
         },
         android: {
             notification: {

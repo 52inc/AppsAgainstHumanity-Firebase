@@ -161,16 +161,16 @@ export async function update(gameId: string, data: FirebaseFirestore.UpdateData)
 /**
  * Update the {@link Game} state
  * @param gameId the game to update
- * @param state the state to update to
+ * @param data the game state data to update
  * @param players the list of players to update their state of
  */
-export async function updateState(gameId: string, state: GameState, players: Player[] = []): Promise<void> {
+export async function updateStateWithData(gameId: string, data: FirebaseFirestore.UpdateData, players: Player[] = []): Promise<void> {
+    if (!data.state) return Promise.reject('You must pass a state when updating this way');
+
     const gameDoc = firestore.collection(COLLECTION_GAMES)
         .doc(gameId);
 
-    await gameDoc.update({
-        state: state
-    });
+    await gameDoc.update(data);
 
     // We should also update all the UserGame states for every player connected to the game
     if (players.length > 0) {
@@ -183,7 +183,7 @@ export async function updateState(gameId: string, state: GameState, players: Pla
 
                 try {
                     await playerUserGameDoc.update({
-                        state: state
+                        state: data.state
                     })
                 } catch (e) {
                     console.log(`Unable to update player's game state: ${e}`)
@@ -191,6 +191,18 @@ export async function updateState(gameId: string, state: GameState, players: Pla
             }
         }
     }
+}
+
+/**
+ * Update the {@link Game} state
+ * @param gameId the game to update
+ * @param state the state to update to
+ * @param players the list of players to update their state of
+ */
+export async function updateState(gameId: string, state: GameState, players: Player[] = []): Promise<void> {
+    return updateStateWithData(gameId, {
+        state: state
+    }, players);
 }
 
 export async function setGameWinner(gameId: string, playerId: string): Promise<void> {
