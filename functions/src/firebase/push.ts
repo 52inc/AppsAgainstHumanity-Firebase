@@ -9,6 +9,28 @@ import Timestamp = admin.firestore.Timestamp;
 import BatchResponse = admin.messaging.BatchResponse;
 import MulticastMessage = admin.messaging.MulticastMessage;
 
+export async function sendAllResponsesInMessage(game: Game, judge: Player) {
+    const tokens = await getPlayerPushTokens([judge]);
+    await sendMulticastMessage({
+        tokens: tokens,
+        data: {
+            click_action: 'FLUTTER_NOTIFICATION_CLICK',
+            gameId: game.id,
+        },
+        notification: {
+            title: `Time to judge - ${game.gid}`,
+            body: `All responses are in. Choose a winner!`
+        },
+        android: {
+            notification: {
+                tag: 'game-started',
+                ticker: 'Game Started!',
+                priority: "max"
+            },
+        },
+    })
+}
+
 /**
  * Send push notifications for the start of a new game
  * @param game the game that started

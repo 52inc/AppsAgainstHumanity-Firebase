@@ -4,6 +4,7 @@ import {handlePickWinner} from "./funcs/pickwinner";
 import {handleDownVote} from "./funcs/downvoteprompt";
 import {handleReDealHand} from "./funcs/redealhand";
 import {handleAccountDeletion} from "./funcs/accountdeletion";
+import {handleResponsesChanged} from "./funcs/allresponses";
 
 /**
  * Start Game - [Callable Function]
@@ -67,6 +68,15 @@ exports.reDealHand = functions.https.onCall(handleReDealHand);
 exports.downvotePrompt = functions.firestore
     .document('games/{gameId}/downvotes/tally')
     .onUpdate(handleDownVote);
+
+/**
+ * Response Changes
+ *
+ * notify the judge anytime all responses come in
+ */
+exports.updateResponse = functions.firestore
+    .document('games/{gameId}')
+    .onUpdate(handleResponsesChanged);
 
 /**
  * Account Deletion - [Authentication Trigger]

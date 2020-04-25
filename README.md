@@ -20,7 +20,7 @@ Let's the judge pick the winner of the turn.
 Exchange 1 prize card for a new hand.
 
 ### `downvotePrompt()`
-**Type:** Firestore `onUpdate()`
+**Type:** Firestore `onUpdate()`  
 **Resource:** `games/{gameId}/downvotes/tally`
 
 Check if there have been 2/3 majority downvotes on the current prompt card. If so, it will return any submitted responses and reset the turn with a new prompt maintaining the current judge.
