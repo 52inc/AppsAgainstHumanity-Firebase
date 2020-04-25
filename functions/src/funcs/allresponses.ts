@@ -11,6 +11,9 @@ export async function handleResponsesChanged(change: Change<DocumentSnapshot>, c
     const beforeGame = change.before.data() as Game;
     const afterGame = change.after.data() as Game;
 
+    // This is important since the push method reads the .id field to send the push
+    afterGame.id = gameId;
+
     console.log(`Before Game: ${JSON.stringify(beforeGame)}`);
     console.log(`After Game: ${JSON.stringify(afterGame)}`);
 
