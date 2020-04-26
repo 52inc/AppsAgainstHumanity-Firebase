@@ -11,6 +11,9 @@ export type Game = {
     state: GameState;
     round: number;
     prizesToWin: number;
+    playerLimit: number;
+    pick2Enabled?: boolean;
+    draw2Pick3Enabled?: boolean;
     judgeRotation?: string[];
     cardSets: string[];
     turn?: Turn;

@@ -8,6 +8,7 @@ import {Player, RANDO_CARDRISSIAN} from "../models/player";
 import {flatMap} from "../util/flatmap";
 import {error} from "../util/error";
 import {GameCardPool} from "../models/pool";
+import {Game} from "../models/game";
 
 /**
  * Start Game - [Callable Function]
@@ -121,12 +122,12 @@ async function dealPlayersIn(gameId: string, players: Player[], cardPool: GameCa
 
 /**
  * Generate the first turn of the game
- * @param gameId the id of the game
+ * @param game the id of the game
  * @param players the list of players participating in this game
  * @param cardPool the pool of cards to draw from
  */
 async function generateFirstTurn(
-    gameId: string,
+    game: Game,
     players: Player[],
     cardPool: GameCardPool
 ): Promise<Turn> {
@@ -137,7 +138,14 @@ async function generateFirstTurn(
 
     // Draw the prompt card
     const promptIndex = draw(cardPool.prompts);
-    const promptCard = await firebase.cards.getPromptCard(promptIndex);
+    let promptCard = await firebase.cards.getPromptCard(promptIndex);
+    if (game.pick2Enabled === false || game.draw2Pick3Enabled === false) {
+        while ((getSpecial(promptCard.special) === 'PICK 2' && game.pick2Enabled === false) ||
+            (getSpecial(promptCard.special) === 'DRAW 2, PICK 3' && game.draw2Pick3Enabled === false)) {
+            console.log(`Re-drawing prompt card because player has placed restrictions`);
+            promptCard = await firebase.cards.getPromptCard(draw(cardPool.prompts))
+        }
+    }
 
     // Create and save the turn
     const turn: Turn = {
@@ -153,12 +161,12 @@ async function generateFirstTurn(
         console.log("Rando Cardrissian has been dealt into the first turn")
     }
 
-    await firebase.games.update(gameId, {
+    await firebase.games.update(game.id, {
         turn: turn,
         judgeRotation: judgeOrder
     });
     console.log("Judging rotation is now set");
-    console.log(`The first turn is now set for ${gameId}`);
+    console.log(`The first turn is now set for ${game.id}`);
 
     return turn;
 }
@@ -184,8 +192,8 @@ function combineAndShuffleIndexes(cardSets: CardSet[], selector: (set: CardSet) 
  */
 function promptCardSeedCount(numPlayers: number): number {
     return Math.max(
-        numPlayers * 10,
-        100
+        numPlayers * 12,
+        200
     )
 }
 
