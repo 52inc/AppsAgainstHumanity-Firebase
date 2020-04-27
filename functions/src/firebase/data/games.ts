@@ -337,16 +337,21 @@ export async function updateState(gameId: string, state: GameState, players: Pla
     }, players);
 }
 
-export async function storeTurn(gameId: string, round: number, turnWinner: TurnWinner): Promise<void> {
-    const turnDoc = firestore.collection(COLLECTION_GAMES)
-        .doc(gameId)
-        .collection(COLLECTION_TURNS)
-        .doc(`${round}`);
+export async function storeTurn(game: Game, turnWinner: TurnWinner): Promise<void> {
+    if (game.turn) {
+        const turnDoc = firestore.collection(COLLECTION_GAMES)
+            .doc(game.id)
+            .collection(COLLECTION_TURNS)
+            .doc(`${game.round}`);
 
-    await turnDoc.set({
-        ...turnWinner,
-        createdAt: Timestamp.now()
-    });
+        const turn = game.turn;
+        turn.winner = turnWinner;
+
+        await turnDoc.set({
+            ...turn,
+            createdAt: Timestamp.now()
+        });
+    }
 }
 
 /**
