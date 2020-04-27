@@ -22,11 +22,12 @@ export async function handleJoinGame(data: any, context: CallableContext) {
     if (!name) error('invalid-argument', `You must send a valid user name to join with`);
     // TODO: This would be a good point to set a 'default' avatar
 
+    // Check the game document id first
     let game: Game | undefined;
-    if (gid) {
-        game = await firebase.games.findGame(gid);
-    } else if (gameId) {
+    if (gameId) {
         game = await firebase.games.getGame(gameId);
+    } else if (gid) {
+        game = await firebase.games.findGame(gid);
     }
     if (game) {
 
@@ -53,7 +54,7 @@ export async function handleJoinGame(data: any, context: CallableContext) {
 
                 // Create User Game Record on player obj
                 const userGame: UserGame = {
-                    gid: gid,
+                    gid: game!.gid,
                     state: game!.state,
                     joinedAt: new Date().toISOString()
                 };
