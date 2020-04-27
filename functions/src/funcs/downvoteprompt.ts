@@ -82,6 +82,9 @@ async function resetTurn(gameId: string, players: Player[]): Promise<void> {
             turn: turn
         });
 
+        // Clear out all the downvotes
+        await firestore.games.clearDownvotes(gameId);
+
         // Send Push
         await firestore.push.sendTurnResetMessage(game, players, turn);
 
