@@ -29,6 +29,25 @@ export async function getGame(gameId: string): Promise<Game | undefined> {
     game.id = gameDocSnapshot.id;
     return game;
 }
+
+/**
+ * Fetch a {@link Game} object by it's {gameId}
+ * @param transaction the transaction to fetch this game in
+ * @param gameId the document id of the game to pull
+ */
+export async function getGameByTransaction(transaction: admin.firestore.Transaction, gameId: string): Promise<Game | undefined> {
+    const gameDoc = firestore.collection(COLLECTION_GAMES)
+        .doc();
+
+    const snapshot = await transaction.get(gameDoc);
+    if (snapshot.exists) {
+        const game = snapshot.data() as Game;
+        game.id = snapshot.id;
+        return game;
+    }
+    return undefined;
+}
+
 /**
  * Fetch a {@link Game} object by it's {gameId}
  * @param gid the game invite code
@@ -63,6 +82,27 @@ export async function getPlayers(gameId: string): Promise<Player[] | undefined> 
 }
 
 /**
+ * Fetch all the {@link Player}s for a {@link Game} by the {gameId}
+ * @param transaction
+ * @param gameId the id of the game to get all the players for
+ */
+export async function getPlayersByTransaction(
+    transaction: admin.firestore.Transaction,
+    gameId: string
+): Promise<Player[] | undefined> {
+    const playerCollection = firestore.collection(COLLECTION_GAMES)
+        .doc(gameId)
+        .collection(COLLECTION_PLAYERS);
+
+    const querySnapshot = await transaction.get(playerCollection);
+    if (!querySnapshot.empty) {
+        return querySnapshot.docs.map((snapshot) => snapshot.data() as Player);
+    }
+
+    return undefined;
+}
+
+/**
  * Fetch a {@link Player} for a {@link Game} by the {gameId}
  * @param gameId the id of the game to get all the players for
  * @param playerId the id of the player to fetch
@@ -75,6 +115,25 @@ export async function getPlayer(gameId: string, playerId: string): Promise<Playe
 
     const playerSnapshot = await playerDoc.get();
     return playerSnapshot.data() as Player;
+}
+
+/**
+ * Fetch a {@link Player} for a {@link Game} by the {gameId}
+ * @param transaction the transaction to fetch the player with
+ * @param gameId the id of the game to get all the players for
+ * @param playerId the id of the player to fetch
+ */
+export async function getPlayerByTransaction(transaction: admin.firestore.Transaction, gameId: string, playerId: string): Promise<Player | undefined> {
+    const playerDoc = await firestore.collection(COLLECTION_GAMES)
+        .doc(gameId)
+        .collection(COLLECTION_PLAYERS)
+        .doc(playerId);
+
+    const snapshot = await transaction.get(playerDoc);
+    if (snapshot.exists) {
+        return snapshot.data() as Player;
+    }
+    return undefined;
 }
 
 /**
@@ -127,6 +186,28 @@ export async function drawResponseCards(gameId: string, count: number): Promise<
     await responseCardPool.update(responsePool);
 
     return cards.getResponseCards(responseCardIndexes);
+}
+
+/**
+ * Submit response cards to a current game
+ *
+ * @param transaction
+ * @param gameId
+ * @param playerId
+ * @param responseCards
+ */
+export function submitResponseCards(
+    transaction: admin.firestore.Transaction,
+    gameId: string,
+    playerId: string,
+    responseCards: ResponseCard[]
+) {
+    const gameDoc = firestore.collection(COLLECTION_GAMES)
+        .doc(gameId);
+
+    transaction.update(gameDoc, {
+        [`turn.responses.${playerId}`]: responseCards
+    });
 }
 
 /**

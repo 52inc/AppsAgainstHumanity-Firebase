@@ -54,6 +54,30 @@ export async function setHand(gameId: string, playerId: string, responseCards: R
 }
 
 /**
+ * Set the hand for the provided user for a given game
+ *
+ * @param transaction the transaction to apply this operation to
+ * @param gameId the id of the game in which the context of this action is being made
+ * @param playerId the id of the player to update
+ * @param responseCards the list of {@link ResponseCard} to update as the player's hand
+ */
+export function setHandByTransaction(
+    transaction: admin.firestore.Transaction,
+    gameId: string,
+    playerId: string,
+    responseCards: ResponseCard[]
+): admin.firestore.Transaction {
+    const playerDoc = firestore.collection(COLLECTION_GAMES)
+        .doc(gameId)
+        .collection(COLLECTION_PLAYERS)
+        .doc(playerId);
+
+    return transaction.update(playerDoc, {
+        hand: responseCards
+    });
+}
+
+/**
  * Re-deal hand for the provided user for a given game and remove a prize card as price
  *
  * @param gameId the id of the game in which the context of this action is being made

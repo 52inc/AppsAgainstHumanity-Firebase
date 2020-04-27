@@ -4,8 +4,8 @@ import {handlePickWinner} from "./funcs/pickwinner";
 import {handleDownVote} from "./funcs/downvoteprompt";
 import {handleReDealHand} from "./funcs/redealhand";
 import {handleAccountDeletion} from "./funcs/accountdeletion";
-import {handleResponsesChanged} from "./funcs/allresponses";
 import {handleJoinGame} from "./funcs/joingame";
+import {handleSubmitResponses} from "./funcs/submitresponse";
 
 /**
  * Start Game - [Callable Function]
@@ -59,6 +59,13 @@ exports.reDealHand = functions.https.onCall(handleReDealHand);
 exports.joinGame = functions.https.onCall(handleJoinGame);
 
 /**
+ * Submit Response - [Callable Function]
+ *
+ * This function will be used by players to be able to submit a response to an ongoing game
+ */
+exports.submitResponses = functions.https.onCall(handleSubmitResponses);
+
+/**
  * Downvotes - [Firestore onUpdate Trigger]
  *
  * Resource: `games/{gameId}/downvotes/{tally}`
@@ -76,15 +83,6 @@ exports.joinGame = functions.https.onCall(handleJoinGame);
 exports.downvotePrompt = functions.firestore
     .document('games/{gameId}/downvotes/tally')
     .onUpdate(handleDownVote);
-
-/**
- * Response Changes
- *
- * notify the judge anytime all responses come in
- */
-exports.updateResponse = functions.firestore
-    .document('games/{gameId}')
-    .onUpdate(handleResponsesChanged);
 
 /**
  * Account Deletion - [Authentication Trigger]
