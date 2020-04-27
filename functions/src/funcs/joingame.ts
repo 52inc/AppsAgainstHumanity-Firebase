@@ -4,6 +4,7 @@ import {error} from "../util/error";
 import {Player} from "../models/player";
 import {UserGame} from "../models/usergame";
 import {none} from "../util/array";
+import {Game} from "../models/game";
 
 /**
  * Join Game - [Callable Function]
@@ -12,15 +13,21 @@ import {none} from "../util/array";
 export async function handleJoinGame(data: any, context: CallableContext) {
     const uid = context.auth?.uid;
     const gid = data.gid;
+    const gameId = data.game_id;
     const name = data.name;
     const avatar = data.avatar;
 
     if (!uid) error('unauthenticated', `You must be authenticated to use this endpoint`);
-    if (!gid) error('invalid-argument', 'You must specify a valid game code');
+    if (!gid && !gameId) error('invalid-argument', 'You must specify a valid game code or id');
     if (!name) error('invalid-argument', `You must send a valid user name to join with`);
     // TODO: This would be a good point to set a 'default' avatar
 
-    const game = await firebase.games.findGame(gid);
+    let game: Game | undefined;
+    if (gid) {
+        game = await firebase.games.findGame(gid);
+    } else if (gameId) {
+        game = await firebase.games.getGame(gameId);
+    }
     if (game) {
 
         // Game completed, deny request
@@ -42,21 +49,21 @@ export async function handleJoinGame(data: any, context: CallableContext) {
                     isInactive: false,
                     isRandoCardrissian: false,
                 };
-                firebase.players.joinGame(transaction, game.id, player);
+                firebase.players.joinGame(transaction, game!.id, player);
 
                 // Create User Game Record on player obj
                 const userGame: UserGame = {
                     gid: gid,
-                    state: game.state,
+                    state: game!.state,
                     joinedAt: new Date().toISOString()
                 };
-                firebase.players.createUserGame(transaction, uid, game.id, userGame);
+                firebase.players.createUserGame(transaction, uid, game!.id, userGame);
 
                 // If game is in-progress, then be sure to add this person to the judging order
-                if (game.state === 'inProgress') {
-                    if (game.judgeRotation && none(game.judgeRotation, (id) => id === uid)) {
-                        console.log(`Adding User(${uid}) to the Judge Rotation for Game(${game.id})`);
-                        firebase.games.addToJudgeRotation(transaction, game.id, uid);
+                if (game!.state === 'inProgress') {
+                    if (game!.judgeRotation && none(game!.judgeRotation, (id) => id === uid)) {
+                        console.log(`Adding User(${uid}) to the Judge Rotation for Game(${game!.id})`);
+                        firebase.games.addToJudgeRotation(transaction, game!.id, uid);
                     }
                 }
             });
