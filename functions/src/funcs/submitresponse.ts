@@ -3,6 +3,7 @@ import {error} from "../util/error";
 import * as firebase from "../firebase/firebase.js";
 import {all, any, none} from "../util/array";
 import {ResponseCard} from "../models/cards";
+import {Player} from "../models/player";
 
 /**
  * Submit Responses - [Callable Function]
@@ -54,7 +55,10 @@ export async function handleSubmitResponses(data: any, context: CallableContext)
 
                 // Check that all responses have been submitted
                 const validPlayers = players.filter((p) => p.id !== game.turn?.judgeId && !p.isInactive);
-                if (all(validPlayers, (p) => game.turn?.responses?.[p.id] !== undefined)) {
+                const validateSubmission = (p: Player) => {
+                    return p.id === uid || game.turn?.responses?.[p.id] !== undefined;
+                };
+                if (all(validPlayers, validateSubmission)) {
                     console.log(`All players have submitted a response`)
                     // Send push to judge
                     const judgePlayer = players.find((p) => p.id === game.turn?.judgeId);
