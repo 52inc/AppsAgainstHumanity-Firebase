@@ -37,7 +37,7 @@ export async function getGame(gameId: string): Promise<Game | undefined> {
  */
 export async function getGameByTransaction(transaction: admin.firestore.Transaction, gameId: string): Promise<Game | undefined> {
     const gameDoc = firestore.collection(COLLECTION_GAMES)
-        .doc();
+        .doc(gameId);
 
     const snapshot = await transaction.get(gameDoc);
     if (snapshot.exists) {
