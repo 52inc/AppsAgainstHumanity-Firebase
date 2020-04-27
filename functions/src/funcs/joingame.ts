@@ -3,6 +3,7 @@ import * as firebase from "../firebase/firebase";
 import {error} from "../util/error";
 import {Player} from "../models/player";
 import {UserGame} from "../models/usergame";
+import {none} from "../util/array";
 
 /**
  * Join Game - [Callable Function]
@@ -21,10 +22,18 @@ export async function handleJoinGame(data: any, context: CallableContext) {
 
     const game = await firebase.games.findGame(gid);
     if (game) {
+
+        // Game completed, deny request
+        if (game.state === 'completed')
+            error('invalid-argument', 'This game has already completed');
+
+        // Game is starting, deny request
+        if (game.state === 'starting')
+            error('cancelled', 'This game is currently starting, please try again');
+
         const players = await firebase.games.getPlayers(game.id);
         if ((players?.length || 0) < (game.playerLimit || 30)) {
             console.log("Player limit is NOT met, add player to game");
-
             await firebase.firestore.runTransaction(async (transaction) => {
                 const player: Player = {
                     id: uid,
@@ -42,8 +51,17 @@ export async function handleJoinGame(data: any, context: CallableContext) {
                     joinedAt: new Date().toISOString()
                 };
                 firebase.players.createUserGame(transaction, uid, game.id, userGame);
+
+                // If game is in-progress, then be sure to add this person to the judging order
+                if (game.state === 'inProgress') {
+                    if (game.judgeRotation && none(game.judgeRotation, (id) => id === uid)) {
+                        console.log(`Adding User(${uid}) to the Judge Rotation for Game(${game.id})`);
+                        firebase.games.addToJudgeRotation(transaction, game.id, uid);
+                    }
+                }
             });
 
+            return game;
         } else {
             error('unavailable', `This Game, ${gid}, is already full. Cannot join.`);
         }

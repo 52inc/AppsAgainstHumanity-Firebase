@@ -226,6 +226,24 @@ export async function updateStateWithData(gameId: string, data: FirebaseFirestor
     }
 }
 
+export function addToJudgeRotation(transaction: admin.firestore.Transaction, gameId: string, userId: string) {
+    const gameDoc = firestore.collection(COLLECTION_GAMES)
+        .doc(gameId);
+
+    transaction.update(gameDoc, {
+        judgeRotation: FieldValue.arrayUnion(userId)
+    })
+}
+
+export function removeFromJudgeRotation(transaction: admin.firestore.Transaction, gameId: string, userId: string) {
+    const gameDoc = firestore.collection(COLLECTION_GAMES)
+        .doc(gameId);
+
+    transaction.update(gameDoc, {
+        judgeRotation: FieldValue.arrayRemove(userId)
+    })
+}
+
 /**
  * Update the {@link Game} state
  * @param gameId the game to update
