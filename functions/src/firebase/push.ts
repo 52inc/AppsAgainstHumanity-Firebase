@@ -104,9 +104,9 @@ export async function sendNewRoundMessage(game: Game, newTurn: Turn, players: Pl
     const winnerToken = await getPlayerPushTokens(players.filter((p) => p.id === newTurn.winner?.playerId));
     const otherTokens = await getPlayerPushTokens(players.filter((p) => p.id !== newTurn.judgeId && p.id !== newTurn.winner?.playerId));
 
-    await sendNewJudgeMessage(game, judgePushToken);
-    await sendWinnerMessage(game, winnerToken);
-    await sendAllMessage(game, newTurn,game.round + 1, otherTokens);
+    if (judgePushToken.length > 0) await sendNewJudgeMessage(game, judgePushToken);
+    if (winnerToken.length > 0) await sendWinnerMessage(game, winnerToken);
+    if (otherTokens.length > 0) await sendAllMessage(game, newTurn,game.round + 1, otherTokens);
 }
 
 /**
