@@ -52,7 +52,7 @@ export async function handleStartGame(data: any, context: CallableContext) {
                         /*
                          * Generate the turn
                          */
-                        const firstTurn = await generateFirstTurn(gameId, players, cardPool);
+                        const firstTurn = await generateFirstTurn(game, players, cardPool);
 
                         /*
                          * Seed Card Pool
