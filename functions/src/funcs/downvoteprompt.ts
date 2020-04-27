@@ -49,6 +49,9 @@ export async function handleDownVote(change: Change<DocumentSnapshot>, context: 
 async function resetTurn(gameId: string, players: Player[]): Promise<void> {
     const game = await firestore.games.getGame(gameId);
     if (game && game.turn) {
+        // Store vetoed prompt card for posterity
+        await firestore.games.storeVetoedPromptCard(gameId, game.turn.promptCard);
+
         // Return any responses to players
         await firestore.games.returnResponseCards(gameId, game);
 

@@ -72,6 +72,9 @@ export async function handlePickWinner(data: any, context: CallableContext) {
                     response: playerResponses
                 };
 
+                // store this result for the data
+                await firebase.games.storeTurn(gameId, game.round, turnWinner);
+
                 // Pick next judge from order
                 const currentJudgeIndex = game.judgeRotation?.indexOf(game.turn?.judgeId!)!;
                 let nextJudge: string;

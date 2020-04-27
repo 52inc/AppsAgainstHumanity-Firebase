@@ -1,7 +1,7 @@
 import {
     COLLECTION_CARD_POOL, COLLECTION_DOWNVOTES,
     COLLECTION_GAMES,
-    COLLECTION_PLAYERS, COLLECTION_USERS,
+    COLLECTION_PLAYERS, COLLECTION_TURNS, COLLECTION_USERS, COLLECTION_VETOED,
     DOCUMENT_PROMPTS,
     DOCUMENT_RESPONSES, DOCUMENT_TALLY
 } from '../constants';
@@ -13,6 +13,8 @@ import {CardPool} from "../../models/pool";
 import {draw, pickRandomCountFromArray} from "../../util/deal";
 import * as admin from "firebase-admin";
 import FieldValue = admin.firestore.FieldValue;
+import {TurnWinner} from "../../models/turn";
+import Timestamp = admin.firestore.Timestamp;
 
 /**
  * Fetch a {@link Game} object by it's {gameId}
@@ -26,6 +28,25 @@ export async function getGame(gameId: string): Promise<Game | undefined> {
     const game = gameDocSnapshot.data() as Game;
     game.id = gameDocSnapshot.id;
     return game;
+}
+/**
+ * Fetch a {@link Game} object by it's {gameId}
+ * @param gid the game invite code
+ */
+export async function findGame(gid: string): Promise<Game | undefined> {
+    const gameDocSnapshot = await firestore.collection(COLLECTION_GAMES)
+        .where('gid', '==', gid)
+        .limit(1)
+        .get();
+
+    if (!gameDocSnapshot.empty) {
+        const doc = gameDocSnapshot.docs[0];
+        const game = doc.data() as Game;
+        game.id = doc.id;
+        return game;
+    }
+
+    return undefined;
 }
 
 /**
@@ -133,6 +154,18 @@ export async function returnResponseCards(gameId: string, game: Game): Promise<v
     }
 }
 
+export async function storeVetoedPromptCard(gameId: string, promptCard: PromptCard): Promise<void> {
+    const vetoedDoc = firestore.collection(COLLECTION_GAMES)
+        .doc(gameId)
+        .collection(COLLECTION_VETOED)
+        .doc();
+
+    await vetoedDoc.set({
+        ...promptCard,
+        vetoedAt: Timestamp.now()
+    })
+}
+
 export async function clearDownvotes(gameId: string) {
     const tallyDoc = firestore.collection(COLLECTION_GAMES)
         .doc(gameId)
@@ -205,12 +238,15 @@ export async function updateState(gameId: string, state: GameState, players: Pla
     }, players);
 }
 
-export async function setGameWinner(gameId: string, playerId: string): Promise<void> {
-    const gameDoc = firestore.collection(COLLECTION_GAMES)
-        .doc(gameId);
+export async function storeTurn(gameId: string, round: number, turnWinner: TurnWinner): Promise<void> {
+    const turnDoc = firestore.collection(COLLECTION_GAMES)
+        .doc(gameId)
+        .collection(COLLECTION_TURNS)
+        .doc(`${round}`);
 
-    await gameDoc.update({
-        winner: playerId
+    await turnDoc.set({
+        ...turnWinner,
+        createdAt: Timestamp.now()
     });
 }
 

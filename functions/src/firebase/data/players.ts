@@ -1,8 +1,39 @@
-import {COLLECTION_GAMES, COLLECTION_PLAYERS} from '../constants';
+import {COLLECTION_GAMES, COLLECTION_PLAYERS, COLLECTION_USERS} from '../constants';
 import {PromptCard, ResponseCard} from "../../models/cards";
 import {firestore} from "../firebase";
 import * as admin from "firebase-admin";
 import FieldValue = admin.firestore.FieldValue;
+import {Player} from "../../models/player";
+import {UserGame} from "../../models/usergame";
+
+/**
+ * Join a player to a given game id
+ * @param transaction the FB:FS transaction
+ * @param gameId the game to join
+ * @param player the player to add
+ */
+export function joinGame(transaction: admin.firestore.Transaction, gameId: string, player: Player) {
+    const doc = firestore.collection(COLLECTION_GAMES)
+        .doc(gameId)
+        .collection(COLLECTION_PLAYERS)
+        .doc(player.id);
+    transaction.set(doc, player, { merge: true });
+}
+
+/**
+ * Create a new UserGame object reference to the game on the player
+ * @param transaction the FB transaction to execute in
+ * @param uid the user's id
+ * @param gameId the games document id
+ * @param userGame the document to write
+ */
+export function createUserGame(transaction: admin.firestore.Transaction, uid: string, gameId: string, userGame: UserGame) {
+    const doc = firestore.collection(COLLECTION_USERS)
+        .doc(uid)
+        .collection(COLLECTION_GAMES)
+        .doc(gameId);
+    transaction.set(doc, userGame, { merge: true });
+}
 
 /**
  * Set the hand for the provided user for a given game

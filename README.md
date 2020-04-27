@@ -9,6 +9,11 @@
 
 Seed the start of a game. It will take the initialized set of card sets and pull a random selection of cards to seed the game with. It will then generate the first turn, and deal the cards from the pool to all the players.
 
+### `joinGame({'gid': 'some_game_code', 'name': 'The name of player joining', 'avatar': 'the avatar image url of player'})`  
+**Type:** Callable HTTPS
+
+Join the game as a player, checking if the game is full yet and writing the appropriate documents
+
 ### `pickWinner({'game_id': 'some_game_id', 'player_id': 'winning_player_id})`
 **Type:** Callable HTTPS
 

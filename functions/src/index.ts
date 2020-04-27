@@ -5,6 +5,7 @@ import {handleDownVote} from "./funcs/downvoteprompt";
 import {handleReDealHand} from "./funcs/redealhand";
 import {handleAccountDeletion} from "./funcs/accountdeletion";
 import {handleResponsesChanged} from "./funcs/allresponses";
+import {handleJoinGame} from "./funcs/joingame";
 
 /**
  * Start Game - [Callable Function]
@@ -49,6 +50,13 @@ exports.pickWinner = functions.https.onCall(handlePickWinner);
  * This function will re-deal a user's hand in exchange for 1 prize card
  */
 exports.reDealHand = functions.https.onCall(handleReDealHand);
+
+/**
+ * Join Game - [Callable Function]
+ *
+ * This function is used to let player's join a game safely
+ */
+exports.joinGame = functions.https.onCall(handleJoinGame);
 
 /**
  * Downvotes - [Firestore onUpdate Trigger]
