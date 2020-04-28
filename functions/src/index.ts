@@ -92,6 +92,9 @@ exports.downvotePrompt = functions.firestore
  *
  * When a user updates their name or avatar url we need to retro update all of
  * their Player objects on any games.
+ *
+ * 1. Check if any part of the actual profile has changed
+ * 2. Mass update user's Player objs
  */
 exports.updateUserProfile = functions.firestore
     .document('users/{userId}')
