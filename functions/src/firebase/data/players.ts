@@ -5,6 +5,7 @@ import * as admin from "firebase-admin";
 import FieldValue = admin.firestore.FieldValue;
 import {Player} from "../../models/player";
 import {UserGame} from "../../models/usergame";
+import {User} from "../../models/user";
 
 /**
  * Join a player to a given game id
@@ -126,7 +127,7 @@ export function addToHand(
  * @param playerId the player id
  * @param promptCard the prize to award
  */
-export async function awardPrompt(gameId: string, playerId: string, promptCard: PromptCard): Promise<void>{
+export async function awardPrompt(gameId: string, playerId: string, promptCard: PromptCard): Promise<void> {
     const playerDoc = firestore.collection(COLLECTION_GAMES)
         .doc(gameId)
         .collection(COLLECTION_PLAYERS)
@@ -135,4 +136,27 @@ export async function awardPrompt(gameId: string, playerId: string, promptCard: 
     await playerDoc.update({
         prizes: FieldValue.arrayUnion(promptCard)
     })
+}
+
+/**
+ * Update all of a user's player objects in all of their games with their new name and/or avatarUrl
+ * @param userId the id of the user to update the player objs of
+ * @param updatedUser the new user obj to update with
+ */
+export async function updateAllPlayers(userId: string, updatedUser: User): Promise<void> {
+    const snapshot = await firestore.collectionGroup(COLLECTION_PLAYERS)
+        .where('id', '==', userId)
+        .get();
+
+    if (!snapshot.empty) {
+        await firestore.runTransaction(async (transaction) => {
+            for (const doc of snapshot.docs) {
+                transaction.update(doc.ref, {
+                    name: updatedUser.name,
+                    avatarUrl: updatedUser.avatarUrl
+                })
+            }
+        });
+        console.log(`Updated all ${snapshot.docs.length} player objects for User(${userId})`);
+    }
 }

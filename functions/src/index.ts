@@ -6,6 +6,7 @@ import {handleReDealHand} from "./funcs/redealhand";
 import {handleAccountDeletion} from "./funcs/accountdeletion";
 import {handleJoinGame} from "./funcs/joingame";
 import {handleSubmitResponses} from "./funcs/submitresponse";
+import {handleUserUpdates} from "./funcs/userupdates";
 
 /**
  * Start Game - [Callable Function]
@@ -83,6 +84,18 @@ exports.submitResponses = functions.https.onCall(handleSubmitResponses);
 exports.downvotePrompt = functions.firestore
     .document('games/{gameId}/downvotes/tally')
     .onUpdate(handleDownVote);
+
+/**
+ * User Updates - [Firestore onUpdate Trigger]
+ *
+ * Resource: `user/{userId}`
+ *
+ * When a user updates their name or avatar url we need to retro update all of
+ * their Player objects on any games.
+ */
+exports.updateUserProfile = functions.firestore
+    .document('users/{userId}')
+    .onUpdate(handleUserUpdates);
 
 /**
  * Account Deletion - [Authentication Trigger]

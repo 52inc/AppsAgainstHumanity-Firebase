@@ -30,6 +30,12 @@ Exchange 1 prize card for a new hand.
 
 Check if there have been 2/3 majority downvotes on the current prompt card. If so, it will return any submitted responses and reset the turn with a new prompt maintaining the current judge.
 
+### `updateUserProfile()`  
+**Type:** Firestore `onUpdate()`  
+**Resource:** `users/{userId}`  
+
+When a user updates their name or avatar url we need to retro update all of their Player objects on any games.
+
 ### `accountDeletion()`
 **Type:** Authentication `onDelete()`
 
