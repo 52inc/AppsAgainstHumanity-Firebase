@@ -69,6 +69,37 @@ export async function findGame(gid: string): Promise<Game | undefined> {
 }
 
 /**
+ * Remove yourself from a game
+ * @param transaction
+ * @param uid
+ * @param game
+ */
+export function leaveGame(transaction: admin.firestore.Transaction, uid: string, game: Game) {
+    const gameDoc = firestore.collection(COLLECTION_GAMES)
+        .doc(game.id);
+
+    const playerDoc = gameDoc
+        .collection(COLLECTION_PLAYERS)
+        .doc(uid);
+
+    // Set your player to inactive
+    transaction.update(playerDoc, {
+        isInactive: true
+    });
+
+    // Delete your responses from the current turn
+    if (game.turn?.responses?.[uid]) {
+        delete game.turn.responses[uid];
+    }
+
+    // Remove yourself from the judging rotation and responses
+    transaction.update(gameDoc, {
+        judgeRotation: FieldValue.arrayRemove(uid),
+        'turn.responses': game.turn?.responses
+    })
+}
+
+/**
  * Fetch all the {@link Player}s for a {@link Game} by the {gameId}
  * @param gameId the id of the game to get all the players for
  */

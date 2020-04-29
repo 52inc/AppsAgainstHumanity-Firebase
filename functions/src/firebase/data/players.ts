@@ -37,6 +37,21 @@ export function createUserGame(transaction: admin.firestore.Transaction, uid: st
 }
 
 /**
+ * Delete a user game object from a user, effectively removing their access from it
+ * @param transaction
+ * @param uid
+ * @param gameId
+ */
+export function deleteUserGame(transaction: admin.firestore.Transaction, uid: string, gameId: string) {
+    const doc = firestore.collection(COLLECTION_USERS)
+        .doc(uid)
+        .collection(COLLECTION_GAMES)
+        .doc(gameId);
+
+    transaction.delete(doc);
+}
+
+/**
  * Set the hand for the provided user for a given game
  *
  * @param gameId the id of the game in which the context of this action is being made

@@ -7,6 +7,7 @@ import {handleAccountDeletion} from "./funcs/accountdeletion";
 import {handleJoinGame} from "./funcs/joingame";
 import {handleSubmitResponses} from "./funcs/submitresponse";
 import {handleUserUpdates} from "./funcs/userupdates";
+import {handleLeaveGame} from "./funcs/leavegame";
 
 /**
  * Start Game - [Callable Function]
@@ -58,6 +59,16 @@ exports.reDealHand = functions.https.onCall(handleReDealHand);
  * This function is used to let player's join a game safely
  */
 exports.joinGame = functions.https.onCall(handleJoinGame);
+
+/**
+ * Leave Game - [Callable Function]
+ *
+ * This function let's a player leave a waiting room or an ongoing game
+ * If the game is 'starting' then this request will be denied, if the game is completed only
+ * the game reference is deleted, otherwise the player is set to inactive, removed from judging, and
+ * any responses in the turn removed
+ */
+exports.leaveGame = functions.https.onCall(handleLeaveGame);
 
 /**
  * Submit Response - [Callable Function]
