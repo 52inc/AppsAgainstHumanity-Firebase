@@ -95,7 +95,7 @@ export function leaveGame(transaction: admin.firestore.Transaction, uid: string,
     // Remove yourself from the judging rotation and responses
     transaction.update(gameDoc, {
         judgeRotation: FieldValue.arrayRemove(uid),
-        'turn.responses': game.turn?.responses
+        'turn.responses': game.turn?.responses || {}
     })
 }
 
