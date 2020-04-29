@@ -65,6 +65,10 @@ async function resetTurn(gameId: string, players: Player[]): Promise<void> {
             winner: game.turn.winner,
         };
 
+        if (game.turn.winner === undefined) {
+            delete turn.winner;
+        }
+
         // Go ahead and set Rando Cardrissian's response if he is a part of this game
         if (players.find((p) => p.isRandoCardrissian)) {
             let drawCount = 1;
