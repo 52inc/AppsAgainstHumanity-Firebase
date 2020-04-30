@@ -66,6 +66,8 @@ export async function handleJoinGame(data: any, context: CallableContext) {
                         console.log(`Adding User(${uid}) to the Judge Rotation for Game(${game!.id})`);
                         firebase.games.addToJudgeRotation(transaction, game!.id, uid);
                     }
+
+                    // TODO: Also check if we need to deal them into the ongoing game
                 }
             });
 
