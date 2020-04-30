@@ -43,7 +43,7 @@ export async function handleStartGame(data: any, context: CallableContext) {
                         const promptCardIndexes = combineAndShuffleIndexes(cardSets, (set) => set.promptIndexes ?? []);
                         const responseCardIndexes = combineAndShuffleIndexes(cardSets, (set) => set.responseIndexes ?? []);
                         const promptCards = pickRandomCountFromArray(promptCardIndexes, promptCardSeedCount(players.length));
-                        const responseCards = pickRandomCountFromArray(responseCardIndexes, responseCardSeedCount(players.length));
+                        const responseCards = pickRandomCountFromArray(responseCardIndexes, responseCardSeedCount(players.length, game.prizesToWin));
                         const cardPool: GameCardPool = { prompts: promptCards, responses: responseCards };
 
                         // Deal 10 cards to every player, except Rando Cardrissian
@@ -202,9 +202,9 @@ function promptCardSeedCount(numPlayers: number): number {
  * This will return 200 at a minimum
  * @param numPlayers the number of players that are in the game
  */
-function responseCardSeedCount(numPlayers: number): number {
+function responseCardSeedCount(numPlayers: number, prizesToWin: number): number {
     const count = (numPlayers * 10) /* To account for initial deal */ +
-        (numPlayers * 9) + /* To account for drawing cards */
-        (numPlayers * 20); /* To account for re-deals */
+        (numPlayers * prizesToWin * numPlayers) + /* To account for drawing cards */
+        (numPlayers * 10); /* To account for re-deals */
     return Math.max(count, 200);
 }
