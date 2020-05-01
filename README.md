@@ -4,7 +4,7 @@
 
 **Location:** `/functions`
 
-### `startGame({'game_id': 'some_game_id'})`
+### `startGame({'game_id': 'some_game_document_id'})`
 **Type:** Callable HTTPS
 
 Seed the start of a game. It will take the initialized set of card sets and pull a random selection of cards to seed the game with. It will then generate the first turn, and deal the cards from the pool to all the players.
@@ -14,12 +14,22 @@ Seed the start of a game. It will take the initialized set of card sets and pull
 
 Join the game as a player, checking if the game is full yet and writing the appropriate documents
 
-### `pickWinner({'game_id': 'some_game_id', 'player_id': 'winning_player_id})`
+### `leaveGame({'game_id': 'some_game_document_id'})`
+**Type:** Callable HTTPS
+
+Leave a game and remove your reference to it in the past games list
+
+### `kickPlayer({'game_id': 'some_game_document_id', 'player_id': 'some_player_id'})`
+**Type:** Callable HTTPS
+
+Kick a player out of your current game. This can only be called by the game owner.
+
+### `pickWinner({'game_id': 'some_game_document_id', 'player_id': 'winning_player_id})`
 **Type:** Callable HTTPS
 
 Let's the judge pick the winner of the turn.
 
-### `reDealHand({'game_id': 'some_game_id'})`
+### `reDealHand({'game_id': 'some_game_document_id'})`
 **Type:** Callable HTTPS
 
 Exchange 1 prize card for a new hand.

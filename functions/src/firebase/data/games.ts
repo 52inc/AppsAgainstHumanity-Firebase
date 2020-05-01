@@ -149,25 +149,6 @@ export async function getPlayer(gameId: string, playerId: string): Promise<Playe
 }
 
 /**
- * Fetch a {@link Player} for a {@link Game} by the {gameId}
- * @param transaction the transaction to fetch the player with
- * @param gameId the id of the game to get all the players for
- * @param playerId the id of the player to fetch
- */
-export async function getPlayerByTransaction(transaction: admin.firestore.Transaction, gameId: string, playerId: string): Promise<Player | undefined> {
-    const playerDoc = await firestore.collection(COLLECTION_GAMES)
-        .doc(gameId)
-        .collection(COLLECTION_PLAYERS)
-        .doc(playerId);
-
-    const snapshot = await transaction.get(playerDoc);
-    if (snapshot.exists) {
-        return snapshot.data() as Player;
-    }
-    return undefined;
-}
-
-/**
  * Draw a new prompt card from the game pool by removing it
  * @param gameId the game id to draw from
  * @return a {@link Promise} of the {@link PromptCard}
@@ -344,15 +325,6 @@ export function addToJudgeRotation(transaction: admin.firestore.Transaction, gam
 
     transaction.update(gameDoc, {
         judgeRotation: FieldValue.arrayUnion(userId)
-    })
-}
-
-export function removeFromJudgeRotation(transaction: admin.firestore.Transaction, gameId: string, userId: string) {
-    const gameDoc = firestore.collection(COLLECTION_GAMES)
-        .doc(gameId);
-
-    transaction.update(gameDoc, {
-        judgeRotation: FieldValue.arrayRemove(userId)
     })
 }
 

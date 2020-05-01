@@ -8,6 +8,7 @@ import {handleJoinGame} from "./funcs/joingame";
 import {handleSubmitResponses} from "./funcs/submitresponse";
 import {handleUserUpdates} from "./funcs/userupdates";
 import {handleLeaveGame} from "./funcs/leavegame";
+import {handleKickPlayer} from "./funcs/kickplayer";
 
 /**
  * Start Game - [Callable Function]
@@ -69,6 +70,14 @@ exports.joinGame = functions.https.onCall(handleJoinGame);
  * any responses in the turn removed
  */
 exports.leaveGame = functions.https.onCall(handleLeaveGame);
+
+/**
+ * Kick Player - [Callable Function]
+ *
+ * Kick a player from your game, only possible for game owner, and this will effectively ban them
+ * from that game so they can't re-join
+ */
+exports.kickPlayer = functions.https.onCall(handleKickPlayer);
 
 /**
  * Submit Response - [Callable Function]
