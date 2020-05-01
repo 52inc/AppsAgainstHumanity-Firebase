@@ -4,7 +4,7 @@ import * as firebase from "../firebase/firebase";
 import {Turn, TurnWinner} from "../models/turn";
 import {getSpecial, PromptCard} from "../models/cards";
 import {Player, RANDO_CARDRISSIAN} from "../models/player";
-import {Game} from "../models/game";
+import {Game, nextJudge} from "../models/game";
 import {pickRandomCountFromArray} from "../util/deal";
 import {asyncMapValues} from "../util/map";
 import * as admin from "firebase-admin";
@@ -76,19 +76,13 @@ export async function handlePickWinner(data: any, context: CallableContext) {
                 await firebase.games.storeTurn(game, turnWinner);
 
                 // Pick next judge from order
-                const currentJudgeIndex = game.judgeRotation?.indexOf(game.turn?.judgeId!)!;
-                let nextJudge: string;
-                if (currentJudgeIndex < game.judgeRotation!.length - 1) {
-                    nextJudge = game.judgeRotation![currentJudgeIndex + 1];
-                } else{
-                    nextJudge = game.judgeRotation![0];
-                }
+                const newJudge = nextJudge(game, game.turn?.judgeId!);
 
                 // Draw next prompt card
                 const newPromptCard = await firebase.games.drawPromptCard(gameId);
 
                 const turn: Turn = {
-                    judgeId: nextJudge,
+                    judgeId: newJudge,
                     responses: {},
                     promptCard: newPromptCard,
                     winner: turnWinner

@@ -21,3 +21,18 @@ export type Game = {
 }
 
 export declare type GameState = 'waitingRoom' | 'starting' | 'inProgress' | 'completed';
+
+/**
+ * Get the next judge in the game's judge rotation for the given judge id
+ *
+ * @param game the game to process
+ * @param currentJudgeId the current judge id
+ */
+export function nextJudge(game: Game, currentJudgeId: string): string {
+    const currentJudgeIndex = game.judgeRotation?.indexOf(currentJudgeId)!;
+    if (currentJudgeIndex < game.judgeRotation!.length - 1) {
+        return game.judgeRotation![currentJudgeIndex + 1];
+    } else{
+        return game.judgeRotation![0];
+    }
+}

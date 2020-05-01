@@ -285,6 +285,21 @@ export async function update(gameId: string, data: FirebaseFirestore.UpdateData)
 }
 
 /**
+ * Update the game state, specifying what you want to udpate with
+ *
+ * @see admin.firestore.DocumentReference#update
+ * @param transaction the firestore transaction to update in
+ * @param gameId the game to update
+ * @param data the data to update
+ */
+export function updateByTransaction(transaction: admin.firestore.Transaction, gameId: string, data: FirebaseFirestore.UpdateData) {
+    const gameDoc = firestore.collection(COLLECTION_GAMES)
+        .doc(gameId);
+
+    transaction.update(gameDoc, data)
+}
+
+/**
  * Update the {@link Game} state
  * @param gameId the game to update
  * @param data the game state data to update

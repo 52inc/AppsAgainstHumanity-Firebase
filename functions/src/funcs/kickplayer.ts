@@ -1,6 +1,7 @@
 import {CallableContext} from "firebase-functions/lib/providers/https";
 import {error} from "../util/error";
 import * as firebase from "../firebase/firebase";
+import {nextJudge} from "../models/game";
 
 /**
  * Kick Player - [Callable Function]
@@ -23,6 +24,14 @@ export async function handleKickPlayer(data: any, context: CallableContext) {
         if (game.ownerId === uid) {
             // Mark player as in-active
             await firebase.firestore.runTransaction(async (transaction) => {
+                // If the user is the current judge, cycle the judges
+                if (game.turn?.judgeId === playerId) {
+                    const newJudge = nextJudge(game, playerId);
+                    firebase.games.updateByTransaction(transaction, gameId, {
+                        'turn.judgeId': newJudge
+                    });
+                    console.log(`New Judge(${newJudge}) Picked!`);
+                }
                 firebase.games.leaveGame(transaction, playerId, game);
                 firebase.players.deleteUserGame(transaction, uid, gameId);
             });
