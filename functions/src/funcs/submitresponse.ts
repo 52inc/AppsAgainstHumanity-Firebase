@@ -1,7 +1,7 @@
 import {CallableContext} from "firebase-functions/lib/providers/https";
 import {error} from "../util/error";
 import * as firebase from "../firebase/firebase.js";
-import {all, any, none} from "../util/array";
+import {all, any, none, sortByIndexedMap} from "../util/array";
 import {ResponseCard} from "../models/cards";
 import {Player} from "../models/player";
 
@@ -15,11 +15,13 @@ export async function handleSubmitResponses(data: any, context: CallableContext)
     const uid = context.auth?.uid;
     const gameId = data.game_id;
     const responses: string[] = data.responses;
+    const indexedResponses: {[index: string]: string} = data.indexed_responses;
 
     // Pre-conditions
     if (!uid) error('unauthenticated', 'You must be signed-in to perform this action');
     if (!gameId) error('invalid-argument', 'You must submit a valid game id');
-    if (!responses || responses.length === 0) error('invalid-argument', 'You must submit valid responses');
+    if ((!responses || responses.length === 0) && !indexedResponses)
+        error('invalid-argument', 'You must submit valid responses');
 
     // Fetch the game for the given document id
     await firebase.firestore.runTransaction(async (transaction) => {
@@ -32,17 +34,24 @@ export async function handleSubmitResponses(data: any, context: CallableContext)
         if (!player) error('not-found', 'Unable to find this player in this game');
 
         // 1. Remove all responses from the player's hand and update that player's object
+        const rawResponses = responses || Object.values(indexedResponses);
         const newHand: ResponseCard[] = player.hand?.filter((c) => {
-            return none(responses, (cid) => c.cid === cid);
+            return none(rawResponses, (cid) => c.cid === cid);
         }) || [];
 
-        const submittedResponses = player.hand?.filter((c) => {
-            return any(responses, (cid) => c.cid === cid);
+        let submittedResponses = player.hand?.filter((c) => {
+            return any(rawResponses, (cid) => c.cid === cid);
         });
 
         if (submittedResponses) {
             // Update the user's hand in their game document
             firebase.players.setHandByTransaction(transaction, gameId, uid, newHand);
+
+            // now we want to sort your 'submittedResponses' by the indexed map (if that was provided)
+            if (indexedResponses) {
+                console.log(`Sorting submitted responses by indexed order`)
+                submittedResponses = sortByIndexedMap(submittedResponses, indexedResponses, (value => value.cid))
+            }
 
             // 2. If we have found valid submissions from that player's hand, then submit them to the game doc
             firebase.games.submitResponseCards(transaction, gameId, uid, submittedResponses);
