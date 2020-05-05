@@ -1,0 +1,26 @@
+name: Hosting
+
+on:
+  push:
+    paths:
+      - 'public/**'
+      - 'firebase.json'
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js 8
+        uses: actions/setup-node@v1
+        with:
+          node-version: 8
+
+      - name: Deploy to Firebase
+        uses: w9jds/firebase-action@master
+        with:
+          args: deploy --only hosting
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
