@@ -69,7 +69,8 @@ export async function handlePickWinner(data: any, context: CallableContext) {
                     playerAvatarUrl: winningPlayer.avatarUrl,
                     isRandoCardrissian: winningPlayer.isRandoCardrissian,
                     promptCard: game.turn?.promptCard!,
-                    response: playerResponses
+                    response: playerResponses,
+                    responses: game.turn?.responses
                 };
 
                 // store this result for the data

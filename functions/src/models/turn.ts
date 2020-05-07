@@ -14,4 +14,5 @@ export type TurnWinner = {
     isRandoCardrissian: boolean;
     promptCard: PromptCard;
     response: ResponseCard[];
+    responses?: {[playerId: string]: ResponseCard[]};
 }
