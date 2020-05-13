@@ -9,6 +9,43 @@ import Timestamp = admin.firestore.Timestamp;
 import BatchResponse = admin.messaging.BatchResponse;
 import MulticastMessage = admin.messaging.MulticastMessage;
 
+/**
+ * Send a push notification to the game owner that a player has joined their game.
+ *
+ * @param game the game that was joined
+ * @param playerName the name of the player that joined
+ */
+export async function sendPlayerJoinedMessage(game: Game, playerName: string) {
+    const tokens = await getPlayerPushTokens([{
+        id: game.ownerId,
+        isRandoCardrissian: false,
+        name: ""
+    }]);
+    await sendMulticastMessage({
+        tokens: tokens,
+        data: {
+            click_action: 'FLUTTER_NOTIFICATION_CLICK',
+            gameId: game.id,
+        },
+        notification: {
+            title: `Player Joined - ${game.gid}`,
+            body: `${playerName} has joined your game!`
+        },
+        android: {
+            notification: {
+                tag: 'player-joined',
+                ticker: 'Player joined!',
+                priority: "high"
+            },
+        },
+    })
+}
+
+/**
+ * Notify the judge that all responses have been submitted and he must choose a winner
+ * @param game the game in context
+ * @param judge the current judge of the round
+ */
 export async function sendAllResponsesInMessage(game: Game, judge: Player) {
     const tokens = await getPlayerPushTokens([judge]);
     await sendMulticastMessage({
@@ -23,8 +60,8 @@ export async function sendAllResponsesInMessage(game: Game, judge: Player) {
         },
         android: {
             notification: {
-                tag: 'game-started',
-                ticker: 'Game Started!',
+                tag: 'all-responses',
+                ticker: 'Time to judge!',
                 priority: "max"
             },
         },

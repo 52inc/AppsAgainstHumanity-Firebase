@@ -69,6 +69,11 @@ export async function handleJoinGame(data: any, context: CallableContext) {
 
                     // TODO: Also check if we need to deal them into the ongoing game
                 }
+
+                // Notify game owner that someone has joined their game
+                if (uid !== game!.ownerId) {
+                    await firebase.push.sendPlayerJoinedMessage(game!, name)
+                }
             });
 
             return game;
