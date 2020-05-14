@@ -1,7 +1,7 @@
 import {CallableContext} from "firebase-functions/lib/providers/https";
 import * as firebase from '../firebase/firebase';
 import {CardSet, getSpecial} from "../models/cards";
-import {shuffle} from "../util/shuffle";
+import {cut, shuffle} from "../util/shuffle";
 import {dealResponses, draw, pickRandomCountFromArray} from "../util/deal";
 import {Turn} from "../models/turn";
 import {Player, RANDO_CARDRISSIAN} from "../models/player";
@@ -180,9 +180,9 @@ async function generateFirstTurn(
 function combineAndShuffleIndexes(cardSets: CardSet[], selector: (set: CardSet) => string[]): string[] {
     const allResponses = flatMap(cardSets, selector);
     shuffle(allResponses);
-    shuffle(allResponses);
-    shuffle(allResponses);
-    return allResponses;
+    const cutResponses = cut(allResponses);
+    shuffle(cutResponses);
+    return cutResponses;
 }
 
 /**
