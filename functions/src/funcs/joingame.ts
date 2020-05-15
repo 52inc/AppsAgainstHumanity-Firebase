@@ -14,12 +14,16 @@ export async function handleJoinGame(data: any, context: CallableContext) {
     const uid = context.auth?.uid;
     const gid = data.gid;
     const gameId = data.game_id;
-    const name = data.name;
+    let name = data.name;
     const avatar = data.avatar;
 
     if (!uid) error('unauthenticated', `You must be authenticated to use this endpoint`);
     if (!gid && !gameId) error('invalid-argument', 'You must specify a valid game code or id');
-    if (!name) error('invalid-argument', `You must send a valid user name to join with`);
+    if (!name) {
+        name = `Player-${uid.slice(0, 5)}`;
+        console.log(`A player has no name. So we give him ${name}`);
+    }
+
     // TODO: This would be a good point to set a 'default' avatar
 
     // Check the game document id first
