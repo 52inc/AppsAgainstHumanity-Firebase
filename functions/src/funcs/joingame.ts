@@ -71,7 +71,17 @@ export async function handleJoinGame(data: any, context: CallableContext) {
                         firebase.games.addToJudgeRotation(transaction, game!.id, uid);
                     }
 
-                    // TODO: Also check if we need to deal them into the ongoing game
+                    // Also check if we need to deal them into the ongoing game
+                    const existingPlayer = players?.find((p) => p.id === uid)
+                    if (!existingPlayer) {
+                        // We are here because we have likely just added this player to an ongoing game, which means
+                        // that they lack the cards to play so we should deal them a new hand
+
+                        // 1. Pull the card pool for this game
+                        const newHand = await firebase.games.drawResponseCards(game!.id, 10)
+                        await firebase.players.setHandByTransaction(transaction, game!.id, uid, newHand)
+                        console.log(`Dealing the new user(${player.name}) a freshly picked hand`)
+                    }
                 }
 
                 // Notify game owner that someone has joined their game
