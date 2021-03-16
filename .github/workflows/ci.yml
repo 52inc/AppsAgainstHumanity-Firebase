@@ -33,6 +33,7 @@ jobs:
         npm run test
 
   deploy:
+    if: github.event == 'push'
     needs: test
     runs-on: ubuntu-latest
     steps:
