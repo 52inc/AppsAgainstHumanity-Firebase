@@ -1,5 +1,4 @@
 import {Special} from "../models/cards";
-import {shuffle} from "./shuffle";
 
 /**
  * Deal response cards from the card pool based on the {@link PromptCard.special}
@@ -8,27 +7,12 @@ import {shuffle} from "./shuffle";
  */
 export function dealResponses(pool: string[], special: Special | undefined): string[] {
     if (special === 'PICK 2') {
-        return pickRandomCountFromArray(pool, 2)
+        return drawN(pool, 2)
     } else if (special === 'DRAW 2, PICK 3') {
-        return pickRandomCountFromArray(pool, 3)
+        return drawN(pool, 3)
     } else {
-        return [draw(pool)]
+        return drawN(pool, 1)
     }
-}
-
-/**
- * pick a random {count} from an array of elements with non-duplication
- * @param array the array of elements to pick from
- * @param count the number of elements to pick
- */
-export function pickRandomCountFromArray<T>(array: T[], count: number): T[] {
-    const items: T[] = [];
-    const amount = Math.min(array.length, count);
-    for (let i = 0; i < amount; i++) {
-        items.push(draw(array)); // Remove the item from the array
-        shuffle(array); // Reshuffle array
-    }
-    return items;
 }
 
 /**
@@ -36,6 +20,14 @@ export function pickRandomCountFromArray<T>(array: T[], count: number): T[] {
  * @param array the array to draw and modify from
  */
 export function draw<T>(array: T[]): T {
-    const index = Math.floor(Math.random() * array.length);
-    return array.splice(index, 1)[0];
+    return array.splice(0, 1)[0];
+}
+
+/**
+ * Draw N number of items off the array
+ * @param array the array to draw and modify from
+ * @param count the number of cards to draw off the top
+ */
+export function drawN<T>(array: T[], count: number): T[] {
+    return array.splice(0, count);
 }

@@ -5,7 +5,7 @@ import {Turn, TurnWinner} from "../models/turn";
 import {getSpecial, PromptCard} from "../models/cards";
 import {Player, RANDO_CARDRISSIAN} from "../models/player";
 import {Game, nextJudge} from "../models/game";
-import {pickRandomCountFromArray} from "../util/deal";
+import {drawN} from "../util/deal";
 import {asyncMapValues} from "../util/map";
 import * as admin from "firebase-admin";
 import FieldValue = admin.firestore.FieldValue;
@@ -177,7 +177,7 @@ async function dealNewCardsToPlayers(game: Game, newPrompt: PromptCard, players:
     players
         .filter((p) => !p.isRandoCardrissian && p.id !== game.turn?.judgeId)
         .forEach((p) => {
-            playerIndexes.set(p.id, pickRandomCountFromArray(cardPool.cards, dealCount))
+            playerIndexes.set(p.id, drawN(cardPool.cards, dealCount))
         });
 
     // Update the game seed with now draw cards removed

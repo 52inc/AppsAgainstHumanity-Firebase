@@ -48,6 +48,13 @@ Exchange 1 prize card for a new hand.
 
 ---
 
+### `wave({'game_id': 'some_game_document_id', 'player_id': 'player_to_wave_to_id', 'message': 'optional messsage to send'})`
+**Type:** Callable HTTPS
+
+Send a notification to a user, a wave if you will, to get them to re-engage with the game.
+
+---
+
 ### `downvotePrompt()`
 **Type:** Firestore `onUpdate()`  
 **Resource:** `games/{gameId}/downvotes/tally`

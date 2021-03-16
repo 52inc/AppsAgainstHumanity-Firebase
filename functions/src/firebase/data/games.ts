@@ -10,7 +10,7 @@ import {Player, RANDO_CARDRISSIAN} from "../../models/player";
 import {cards, firestore} from "../firebase";
 import {PromptCard, ResponseCard} from "../../models/cards";
 import {CardPool} from "../../models/pool";
-import {draw, pickRandomCountFromArray} from "../../util/deal";
+import {draw, drawN} from "../../util/deal";
 import * as admin from "firebase-admin";
 import FieldValue = admin.firestore.FieldValue;
 import {TurnWinner} from "../../models/turn";
@@ -193,7 +193,7 @@ export async function drawResponseCards(gameId: string, count: number): Promise<
 
     const responses = await responseCardPool.get();
     const responsePool = responses.data() as CardPool;
-    const responseCardIndexes = pickRandomCountFromArray(responsePool.cards, count);
+    const responseCardIndexes = drawN(responsePool.cards, count);
 
     await responseCardPool.update(responsePool);
 

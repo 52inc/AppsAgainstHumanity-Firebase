@@ -2,7 +2,7 @@ import {CallableContext} from "firebase-functions/lib/providers/https";
 import * as firebase from '../firebase/firebase';
 import {CardSet, getSpecial} from "../models/cards";
 import {cut, shuffle} from "../util/shuffle";
-import {dealResponses, draw, pickRandomCountFromArray} from "../util/deal";
+import {dealResponses, draw, drawN} from "../util/deal";
 import {Turn} from "../models/turn";
 import {Player, RANDO_CARDRISSIAN} from "../models/player";
 import {flatMap} from "../util/flatmap";
@@ -42,8 +42,12 @@ export async function handleStartGame(data: any, context: CallableContext) {
                         // combine and shuffle all prompt cards
                         const promptCardIndexes = combineAndShuffleIndexes(cardSets, (set) => set.promptIndexes ?? []);
                         const responseCardIndexes = combineAndShuffleIndexes(cardSets, (set) => set.responseIndexes ?? []);
-                        const promptCards = pickRandomCountFromArray(promptCardIndexes, promptCardSeedCount(players.length));
-                        const responseCards = pickRandomCountFromArray(responseCardIndexes, responseCardSeedCount(players.length, game.prizesToWin));
+
+                        // const promptCards = pickRandomCountFromArray(promptCardIndexes, promptCardSeedCount(players.length));
+                        // const responseCards = pickRandomCountFromArray(responseCardIndexes, responseCardSeedCount(players.length, game.prizesToWin));
+
+                        const promptCards = drawN(promptCardIndexes, promptCardSeedCount(players.length));
+                        const responseCards = drawN(responseCardIndexes, responseCardSeedCount(players.length, game.prizesToWin));
                         const cardPool: GameCardPool = { prompts: promptCards, responses: responseCards };
 
                         // Deal 10 cards to every player, except Rando Cardrissian
@@ -107,7 +111,7 @@ async function dealPlayersIn(gameId: string, players: Player[], cardPool: GameCa
     for (const player of players) {
         if (!player.isRandoCardrissian) {
             // Draw and fetch hand
-            const handIndexes = pickRandomCountFromArray(cardPool.responses, 10);
+            const handIndexes = drawN(cardPool.responses, 10);
             const hand = await firebase.cards.getResponseCards(handIndexes);
 
             // Update player's hand in firebase
@@ -180,7 +184,9 @@ async function generateFirstTurn(
 function combineAndShuffleIndexes(cardSets: CardSet[], selector: (set: CardSet) => string[]): string[] {
     const allResponses = flatMap(cardSets, selector);
     shuffle(allResponses);
+    shuffle(allResponses);
     const cutResponses = cut(allResponses);
+    shuffle(cutResponses);
     shuffle(cutResponses);
     return cutResponses;
 }

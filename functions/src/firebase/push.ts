@@ -8,6 +8,37 @@ import {Game} from "../models/game";
 import Timestamp = admin.firestore.Timestamp;
 import BatchResponse = admin.messaging.BatchResponse;
 import MulticastMessage = admin.messaging.MulticastMessage;
+import {messaging} from "firebase-admin/lib/messaging";
+import SendResponse = messaging.SendResponse;
+
+/**
+ * Send a push notification to a user as a way to get them to re-engage with the game
+ * @param gameId the id of the game you are waving from
+ * @param from the player who is sending the wave
+ * @param to the player to send the wave to
+ * @param message an optional message override for the push notification
+ */
+export async function sendWaveToPlayer(gameId: string, from: Player, to: Player, message?: string) {
+    const tokens = await getPlayerPushTokens([to]);
+    await sendMulticastMessage({
+        tokens: tokens,
+        data: {
+            click_action: 'FLUTTER_NOTIFICATION_CLICK',
+            gameId: gameId,
+        },
+        notification: {
+            title: `${from.name} waves at you!`,
+            body: message || `${from.name} wants you to re-engage with the game. Maybe quit being a slacker.`
+        },
+        android: {
+            notification: {
+                tag: 'player-waved',
+                ticker: 'Player waved!',
+                priority: "high"
+            },
+        },
+    });
+}
 
 /**
  * Send a push notification to the game owner that a player has joined their game.
@@ -250,7 +281,7 @@ async function processBatchResponse(response: BatchResponse) {
     console.log(`Multicast Response(success=${response.successCount}, failure=${response.failureCount})`);
     if (response.failureCount > 0) {
         const failedResponses = response.responses
-            .filter((r) => !r.success);
+            .filter((r: SendResponse) => !r.success);
 
         // I we have failed responses with the right failure code, reset push tokens
         for (const failedResponse of failedResponses) {

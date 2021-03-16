@@ -1,0 +1,66 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+  	match /cardSets/{setId} {
+    	allow read: if request.auth.uid != null;
+    }
+
+  	// Only allow user's to update/read their own documents
+  	match /users/{userId}/{document=**} {
+    	allow read, write: if request.auth.uid == userId;
+    }
+
+    // Only allow access to read games if they are authenticated
+    match /games/{gameId} {
+
+      function isPlayerInGame() {
+      	return exists(/databases/$(database)/documents/games/$(gameId)/players/$(request.auth.uid));
+      }
+
+      function isPlayerActiveInGame() {
+        return get(/databases/$(database)/documents/games/$(gameId)/players/$(request.auth.uid)).data.isInactive == false;
+      }
+
+      function isGameOwner() {
+      	return get(/databases/$(database)/documents/games/$(gameId)).data.ownerId == request.auth.uid;
+      }
+
+    	// Only user's who are participating in a game can read the game
+    	allow read: if request.auth.uid != null && isPlayerInGame();
+
+      // Anyone can create their own game
+     	allow create: if request.auth.uid == request.resource.data.ownerId;
+
+      // Allow all user's of a game to cast downvotes
+      match /downvotes/tally {
+      	allow read, create, update: if request.auth.uid != null
+        									  				&& isPlayerActiveInGame();
+      }
+
+      // Allow only participating players to read the players
+      match /players/{userId} {
+
+      	// A function to check if a request changes part of a player object any user isn't allowed to change
+      	function legalPlayerChange() {
+        	return request.resource.data.hand == resource.data.hand
+          			 && request.resource.data.prizes == resource.data.prizes
+                 && request.resource.data.isRandoCardrissian == resource.data.isRandoCardrissian
+                 && request.resource.data.id == resource.data.id;
+        }
+
+      	allow read: if isPlayerInGame();
+
+        // User's can edit their own player status, or owner can only edit Rando
+        allow update: if legalPlayerChange()
+        							&& userId == request.auth.uid
+        						  || userId == 'rando-cardrissian'
+                      && isGameOwner();
+
+        // Allow game owner to add rando cardrissian
+        allow create: if userId == 'rando-cardrissian'
+                      && isGameOwner();
+      }
+    }
+  }
+}

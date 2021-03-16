@@ -9,6 +9,7 @@ import {handleSubmitResponses} from "./funcs/submitresponse";
 import {handleUserUpdates} from "./funcs/userupdates";
 import {handleLeaveGame} from "./funcs/leavegame";
 import {handleKickPlayer} from "./funcs/kickplayer";
+import {handleWave} from "./funcs/wave";
 
 /**
  * Start Game - [Callable Function]
@@ -87,6 +88,17 @@ exports.kickPlayer = functions.https.onCall(handleKickPlayer);
 exports.submitResponses = functions.https.onCall(handleSubmitResponses);
 
 /**
+ * Wave at a player - [Callable Function]
+ *
+ * This function will let players wave at other players
+ *
+ * Request Params:
+ *     'game_id': the Firestore Document Id of the game you want to start
+ *     'player_id': the id of the player you want to wave to
+ */
+exports.wave = functions.https.onCall(handleWave);
+
+/**
  * Downvotes - [Firestore onUpdate Trigger]
  *
  * Resource: `games/{gameId}/downvotes/{tally}`
@@ -126,4 +138,6 @@ exports.updateUserProfile = functions.firestore
  * This function will listen to account deletions and delete all of their user data
  * stored in firebase
  */
-exports.accountDeletion = functions.auth.user().onDelete(handleAccountDeletion);
+exports.accountDeletion = functions.auth
+    .user()
+    .onDelete(handleAccountDeletion);
