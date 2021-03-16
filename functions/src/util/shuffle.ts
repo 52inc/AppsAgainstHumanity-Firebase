@@ -17,7 +17,8 @@ export function shuffle<T>(array: T[]) {
  * @return the new cut deck. Note. This does not modify the original array
  */
 export function cut<T>(array: T[], cutVariance: number = 10): T[] {
-    const cv = Math.min(array.length, cutVariance);
+    if (array.length <= 1) return array;
+    const cv = Math.min(array.length - 2, cutVariance);
     const cutPos = Math.floor(Math.random() * cv) + ((array.length - cv) / 2);
     const bottom = array.slice(0, cutPos);
     const top = array.slice(cutPos);

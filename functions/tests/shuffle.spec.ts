@@ -23,4 +23,14 @@ describe('cut', () => {
         expect(cutArray).to.have.lengthOf(array.length);
         expect(cutArray).to.not.eql(array);
     });
+    it('death by a thousand cuts', () => {
+        const array = [
+            "0","1","2","3","4","5","6"
+        ];
+        for (let i = 0; i < 1000; i++) {
+            const cutArray = cut(array);
+            expect(cutArray).to.have.lengthOf(array.length);
+            expect(cutArray).to.not.eql(array);
+        }
+    });
 });
