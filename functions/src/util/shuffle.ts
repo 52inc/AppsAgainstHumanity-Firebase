@@ -24,7 +24,7 @@ export function cut<T>(array: T[], cutVariance: number = 10): T[] {
     return top.concat(bottom);
 }
 
-export function FisherYatesModifiedShuffleCutFive<T>(array: T[]): T[] {
+export function fisherYatesModifiedShuffleCutFive<T>(array: T[]): T[] {
   if (array.length <= 1) return array;
   //loop five times
   for (let i = 0; i < 5; i++) {
