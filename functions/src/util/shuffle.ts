@@ -23,3 +23,23 @@ export function cut<T>(array: T[], cutVariance: number = 10): T[] {
     const top = array.slice(cutPos);
     return top.concat(bottom);
 }
+
+export function FisherYatesModifiedShuffleCutFive<T>(array: T[]): T[] {
+  if (array.length <= 1) return array;
+  //loop five times
+  for (let i = 0; i < 5; i++) {
+  //run a Fisher-Yates Shuffle
+  for (let i = 0; i < array.length; i++) {
+    const randomChoiceIndex = getRandom(i, array.length - 1);
+    [array[i], array[randomChoiceIndex]] = [array[randomChoiceIndex], array[i]];
+  }
+  //cut the deck 
+  const cv = Math.min(array.length, cutVariance);
+  const cutPos = Math.floor(Math.random() * cv) + ((array.length - cv) / 2);
+  const bottom = array.slice(0, cutPos);
+  const top = array.slice(cutPos);
+  
+  }  
+  //return the array  
+  return array;
+}
