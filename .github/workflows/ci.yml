@@ -1,6 +1,11 @@
 name: CI
 
 on:
+  pull_request:
+    paths:
+      - 'functions/**'
+    branches:
+      - master
   push:
     paths:
       - 'functions/**'
@@ -28,6 +33,7 @@ jobs:
         npm run test
 
   deploy:
+    if: github.event == 'push'
     needs: test
     runs-on: ubuntu-latest
     steps:
